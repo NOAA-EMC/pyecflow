@@ -1,9 +1,11 @@
-import os
+import subprocess
 import pyecFlow
 
 
-def test_ecflow_dir():
+def test_ecflow_found():
 
-    ecflow_dir = os.environ.get('ECFLOW_DIR', 'undefined')
-    print(f"ECFLOW_DIR = {ecflow_dir}")
-    assert ecflow_dir != "undefined"
+    try:
+        result = subprocess.run(['which', 'ecflow_client'], capture_output=True, check=True, text=True)
+        assert True, f"ecflow_client = {result.stdout.strip()}"
+    except subprocess.CalledProcessError:
+        assert False, "ecflow_client not found!"
