@@ -1,0 +1,40 @@
+name: pytests
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Install and run tests with pytests
+    strategy:
+      matrix:
+        #python: ["3.7", "3.8", "3.9", "3.10"]
+        python: ["3.8"]
+    steps:
+      - name: Setup Python
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: test
+          environment-file: environment.yml
+          python-version: ${{ matrix.python }}
+          auto-activate-base: false
+
+      - name: Install (upgrade) python dependencies
+        shell: bash -el {0}
+        run: |
+          conda info
+          conda list
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: pyecFlow
+
+      - name: Install
+        run: |
+          cd $GITHUB_WORKSPACE/pyecFlow
+          pip install .[dev]
+
+      - name: Run pytests
+        run: |
+          cd $GITHUB_WORKSPACE/pyecFlow
+          pytest -v tests
