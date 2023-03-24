@@ -8,8 +8,9 @@ dependencies:
   - pyyaml
   - jinja2
   - ecflow
-  - pyflow
   - pytest
+  - pip:
+    - git+https://github.com/ecmwf/pyflow@3.1.0
 
 variables:
   QT_MAC_WANTS_LAYER: 1
