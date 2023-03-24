@@ -10,11 +10,16 @@ jobs:
         #python: ["3.7", "3.8", "3.9", "3.10"]
         python: ["3.8"]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: pyecFlow
+
       - name: Setup Python
         uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: test
-          environment-file: environment.yml
+          environment-file: $GITHUB_WORKSPACE/pyecFlow/environment.yml
           python-version: ${{ matrix.python }}
           auto-activate-base: false
 
@@ -23,11 +28,6 @@ jobs:
         run: |
           conda info
           conda list
-
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          path: pyecFlow
 
       - name: Install
         run: |
