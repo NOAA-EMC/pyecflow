@@ -1,0 +1,15 @@
+channels:
+  - conda-forge
+
+dependencies:
+  - python
+  - pip
+  - numpy
+  - pyyaml
+  - jinja2
+  - ecflow
+  - pyflow
+  - pytest
+
+variables:
+  QT_MAC_WANTS_LAYER: 1
