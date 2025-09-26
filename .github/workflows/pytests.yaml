@@ -23,7 +23,6 @@ jobs:
         shell: bash -l {0}
         run: |
           conda info
-          conda install -f test-environment.txt
           conda list
 
       - name: Install and test
