@@ -1,5 +1,4 @@
 import subprocess
-import pyecFlow
 
 
 def test_ecflow_found():

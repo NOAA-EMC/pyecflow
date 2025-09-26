@@ -1,16 +1,15 @@
+name: pyecflow
 channels:
   - conda-forge
-
 dependencies:
   - python
+  - numpy>=1.21
+  - pyyaml>=6.0
+  - jinja2>=3.1.2
+  - ecflow>=5.13
   - pip
-  - numpy
-  - pyyaml
-  - jinja2
-  - ecflow
-  - pytest
   - pip:
-    - git+https://github.com/ecmwf/pyflow@3.1.0
-
+    - wxflow
+    - git+https://github.com/ecmwf/pyflow@3.5.1
 variables:
   QT_MAC_WANTS_LAYER: 1
