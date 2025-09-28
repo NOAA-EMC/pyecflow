@@ -3,7 +3,7 @@ import subprocess
 
 class TestEcflow:
     def test_ecflow_client(self):
-
+        # Test if ecflow_client is available in the system path
         try:
             result = subprocess.run(['which', 'ecflow_client'], capture_output=True, check=True, text=True)
             assert True
@@ -12,6 +12,7 @@ class TestEcflow:
             assert False, "ecflow_client not found!"
 
     def test_ecflow_import(self):
+        # Test if the ecflow module can be imported and check its version
         try:
             import ecflow
             version = ecflow.__version__
