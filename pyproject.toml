@@ -1,13 +1,73 @@
-[build-system]
-# NOTE: `pip install build` to build with `python -m build`
-requires = [
-  "setuptools >= 40.9.0",
-  "wheel"
+[project]
+name = "pyecflow"
+version="0.0.1"
+description = "An application to create ecFlow suites"
+readme = {file = "README.md", content-type = "text/markdown"}
+authors = [
+{name="aerorahul", email="aerorahul@noreply.github.com"},
 ]
+license = {file = "LICENSE.md"}
+requires-python = ">=3.11, <3.14"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Earth Science",
+    "License :: OSI Approved :: Creative Commons Zero",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+]
+keywords = ["ecflow", "pyflow", "wxflow", "workflow"]
+dependencies = [
+    "numpy>=1.21.6",
+    "pyyaml>=6.0",
+    "jinja2>=3.1.2",
+    "wxflow>=0.3.0",
+    "pyflow-workflow-generator>=3.4.1",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    "pre-commit>=4.3.0",
+    "black>=24.4.2",
+    "isort>=6.0.1",
+    "flake8>=7.1.0",
+    "mypy>=0.991",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/aerorahul/pyecflow"
+"Bug Reports" = "https://github.com/aerorahul/pyecflow/issues"
+"Source" = "https://github.com/aerorahul/pyecflow"
+"Documentation" = "https://github.com/aerorahul/pyecflow/blob/main/README.md"
+
+[project.scripts]
+# pyecflow = "pyecflow.__main__:main"
+
+[build-system]
+requires = ["setuptools>=64.0.0", "setuptools-scm[toml]>=6.2", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.pytest.ini_options]
-addopts = ""
-doctest_optionflags = ""
-testpaths = "tests"
-markers = []
+# Packaging/setuptools options
+[tool.setuptools]
+#package-dir = {"" = "."}
+#packages = ["pyecflow"]
+include-package-data = true
+
+#[tool.setuptools.packages.find]
+#where = ["."]
+#exclude = ["tests"]
+
+[tool.setuptools_scm]
+write_to = "pyecflow/_version.py"
+write_to_template = '''
+# Do not change! Do not track in version control!
+__version__ = "{version}"
+'''
+parentdir_prefix_version='pyecflow-'  # get version from GitHub-like tarballs
+fallback_version='0.0.1'
