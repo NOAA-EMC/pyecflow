@@ -55,13 +55,14 @@ build-backend = "setuptools.build_meta"
 
 # Packaging/setuptools options
 [tool.setuptools]
-#package-dir = {"" = "."}
-#packages = ["pyecflow"]
 include-package-data = true
 
-#[tool.setuptools.packages.find]
-#where = ["."]
-#exclude = ["tests"]
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["tests"]
+
+[tool.setuptools.package-data]
+"pyecflow" = ["static/*", "templates/*"]
 
 [tool.setuptools_scm]
 write_to = "pyecflow/_version.py"

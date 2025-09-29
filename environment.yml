@@ -10,6 +10,6 @@ dependencies:
   - pip
   - pip:
     - wxflow
-    - git+https://github.com/ecmwf/pyflow@3.5.1
+    - pyflow-workflow-generator>=3.4.1
 variables:
   QT_MAC_WANTS_LAYER: 1
