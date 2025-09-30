@@ -1,6 +1,5 @@
 [project]
 name = "pyecflow"
-version="0.0.1"
 description = "An application to create ecFlow suites"
 readme = {file = "README.md", content-type = "text/markdown"}
 authors = [
@@ -19,6 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
 ]
+dynamic = ["version"]
 keywords = ["ecflow", "pyflow", "wxflow", "workflow"]
 dependencies = [
     "numpy>=1.21.6",
@@ -55,13 +55,14 @@ build-backend = "setuptools.build_meta"
 
 # Packaging/setuptools options
 [tool.setuptools]
-#package-dir = {"" = "."}
-#packages = ["pyecflow"]
 include-package-data = true
 
-#[tool.setuptools.packages.find]
-#where = ["."]
-#exclude = ["tests"]
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["tests"]
+
+[tool.setuptools.package-data]
+"pyecflow" = ["static/*", "templates/*"]
 
 [tool.setuptools_scm]
 write_to = "pyecflow/_version.py"
@@ -70,4 +71,4 @@ write_to_template = '''
 __version__ = "{version}"
 '''
 parentdir_prefix_version='pyecflow-'  # get version from GitHub-like tarballs
-fallback_version='0.0.1'
+fallback_version='v0.0.1'
