@@ -1,5 +1,9 @@
 from __future__ import absolute_import
 
+import logging
+
+LOGGER = logging.getLogger("pyecflow")
+
 import importlib.resources
 
 from .workflow_anchor_family import WorkflowAnchorFamily
