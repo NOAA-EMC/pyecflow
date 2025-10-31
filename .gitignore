@@ -136,3 +136,6 @@ dmypy.json
 
 #
 _version.py
+
+# Ignore scratch directory under notebooks
+notebooks/scratch
