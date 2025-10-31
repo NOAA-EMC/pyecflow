@@ -8,6 +8,7 @@ dependencies:
   - jinja2>=3.1.2
   - ecflow>=5.13
   - pip
+  - jupyterlab>=4.4.0
   - pip:
     - wxflow
     - pyflow-workflow-generator>=3.4.1
