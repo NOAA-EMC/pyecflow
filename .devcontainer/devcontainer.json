@@ -33,7 +33,7 @@
       }
     }
   },
-  "postCreateCommand": "pip install -e . && pip install -r test_requirements.txt",
+  "postCreateCommand": "pip install -e . && pip install -r test-environment.txt",
   "remoteUser": "root",
   "features": {
     "ghcr.io/devcontainers/features/git:1": {}

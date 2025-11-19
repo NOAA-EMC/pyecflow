@@ -23,7 +23,7 @@ COPY . /workspace
 RUN pip install -e .
 
 # Install test dependencies
-RUN pip install -r test_requirements.txt
+RUN pip install -r test-environment.txt
 
 # Set default command
 CMD ["/bin/bash"]
