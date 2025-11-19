@@ -38,7 +38,7 @@ ENV PATH="/opt/conda/bin:${PATH}" \
     QT_MAC_WANTS_LAYER=1
 
 # Copy project files
-COPY --chown=$USERNAME:$USERNAME . /home/$USERNAME/workspace
+COPY . /home/$USERNAME/workspace
 
 # Install the package in development mode
 # NOTE: This is commented out to speed up the build process during development and there are rapid changes to the source code
