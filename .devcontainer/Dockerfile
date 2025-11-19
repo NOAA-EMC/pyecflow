@@ -33,12 +33,12 @@ USER $USERNAME
 WORKDIR /home/$USERNAME/workspace
 
 # Set environment variables
-ENV PATH="/opt/conda/bin:${PATH}" \
+ENV PATH="/home/$USERNAME/.local/bin:/opt/conda/bin:${PATH}" \
     PYTHONUNBUFFERED=1 \
     QT_MAC_WANTS_LAYER=1
 
 # Copy project files
-COPY . /home/$USERNAME/workspace
+COPY --chown=$USER_UID:$USER_GID . /home/$USERNAME/workspace
 
 # Install the package in development mode
 # NOTE: This is commented out to speed up the build process during development and there are rapid changes to the source code
