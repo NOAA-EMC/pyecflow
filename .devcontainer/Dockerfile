@@ -37,9 +37,6 @@ ENV PATH="/home/$USERNAME/.local/bin:/opt/conda/bin:${PATH}" \
     PYTHONUNBUFFERED=1 \
     QT_MAC_WANTS_LAYER=1
 
-# Copy project files
-COPY --chown=$USER_UID:$USER_GID . /home/$USERNAME/workspace
-
 # Install the package in development mode
 # NOTE: This is commented out to speed up the build process during development and there are rapid changes to the source code
 # TODO: Uncomment here and remove from postCreateCommand in devcontainer.json once development slows down
