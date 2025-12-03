@@ -6,7 +6,7 @@ authors = [
 {name="aerorahul", email="aerorahul@noreply.github.com"},
 ]
 license = {file = "LICENSE.md"}
-requires-python = ">=3.11, <3.14"
+requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
@@ -16,6 +16,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
 ]
 dynamic = ["version"]
@@ -41,10 +42,10 @@ test = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/aerorahul/pyecflow"
-"Bug Reports" = "https://github.com/aerorahul/pyecflow/issues"
-"Source" = "https://github.com/aerorahul/pyecflow"
-"Documentation" = "https://github.com/aerorahul/pyecflow/blob/main/README.md"
+"Homepage" = "https://github.com/NOAA-EMC/pyecflow"
+"Bug Reports" = "https://github.com/NOAA-EMC/pyecflow/issues"
+"Source" = "https://github.com/NOAA-EMC/pyecflow"
+"Documentation" = "https://github.com/NOAA-EMC/pyecflow/blob/main/README.md"
 
 [project.scripts]
 # pyecflow = "pyecflow.__main__:main"
