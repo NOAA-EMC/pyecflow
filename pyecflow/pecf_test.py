@@ -1,15 +1,27 @@
 # imports 
-# set up paths and server
 
-#import datetime
 import sys
 import os
 import pyflow as pf
 from pyecflow import read_package_file, WorkflowTask, WorkflowAnchorFamily, generate_suite
-#from header import FileHeader, FileTail, InlineCodeHeader
 
+# set up server
 server_host = 'localhost'
 server_port = 22921 #Anna's personal Ursa EcFlow server port
+
+# Create a minimal suite for testing
+with pf.Suite('testSuite', 
+              host=pf.LocalHost('localhost'),
+              files='./testSuite/scripts') as my_suite:
+    with pf.AnchorFamily('testFamily'):
+        with pf.Task('testTask', script='echo "test"'):
+            pass
+
+# Generate the suite directories by importing and using the generate_suite function
+generate_suite(my_suite, suite_dir='./testSuite')
+
+
+
 
 """
 class WorkflowTask(pf.Task):
@@ -25,6 +37,8 @@ class WorkflowAnchorFamily(pf.AnchorFamily):
             task_tc= famAb_tasks[tt] #get the context dict for this task
             task_triggers[tt] = WorkflowTask(tt, task_tc)
         self.task_triggers = task_triggers
+"""
+
 """
 class TestSuiteBuilder:
     #def __init__(self, filesdir, outdir, number=100):
@@ -80,9 +94,9 @@ class TestSuiteBuilder:
         #self.s.deploy_suite()
         #print(self.s)
         #print(s)
-        
+"""
 
-        """
+"""
         # Create def directory
         def_dir = os.path.join(filesdir, 'testSuite', 'def')
         if not os.path.exists(def_dir):
@@ -120,10 +134,11 @@ class TestSuiteBuilder:
             else:
                 header = InlineCodeHeader('', content, include_path=include_dir)
             header.install(target)
-"""
+
 # Instantiate and generate the suite
 builder = TestSuiteBuilder(100)
 print(builder.s)
 
 # Generate the suite using generate_suite function
 generate_suite(builder.s, suite_dir='testSuite', suite_name='testSuite')
+"""

@@ -42,4 +42,4 @@ except ImportError:  # pragma: no cover
     # Local copy or not installed with setuptools
     __version__ = ""
 
-__all__ = ["read_package_file", "__version__", "WorkflowTask", "WorkflowAnchorFamily", "generate_suite"]
+__all__ = ["read_package_file", "__version__", "WorkflowTask"]
