@@ -1,0 +1,17 @@
+Help on function deploy_suite in module pyflow.nodes:
+
+ddeeppllooyy__ssuuiittee(
+    self,
+    target=<class 'pyflow.deployment.FileSystem'>,
+    node=None,
+    **options
+)
+    Deploys suite and its components.
+
+    Parameters:
+        target(Deployment): Deployment target for the suite.
+        node(str): Path to node to limit deployment to a family/task.
+        **options(dict): Accept extra keyword arguments as deployment options.
+
+    Returns:
+        *Deployment*: Deployment target object.

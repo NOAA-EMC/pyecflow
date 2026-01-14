@@ -5,6 +5,8 @@ import importlib.resources
 from .workflow_task import WorkflowTask
 from .workflow_anchorfamily import WorkflowAnchorFamily
 from .generate_suite import generate_suite
+from .workflow_suite import WorkflowSuite
+from .workflow_family import WorkflowFamily
 
 
 def read_package_file(filetype: str, filename: str) -> str:

@@ -32,9 +32,9 @@ def generate_suite(suite: pf.Suite, suite_dir: str = './', suite_name: str = 'te
         os.makedirs(def_dir, exist_ok=True)
 
     # Save the suite definition file
-    suite_def = suite.ecflow_definition()
-    suite_def.check_definition()
-    suite_def.save_as_defs(os.path.join(def_dir, f'{suite_name}.def'))
+    suite.check_definition()
+    #suite_def = suite.ecflow_definition()
+    #suite_def.save_as_defs(os.path.join(def_dir, f'{suite_name}.def'))
 
     # Create include directory and copy header files
     if not os.path.exists(include_dir):
@@ -50,7 +50,8 @@ def generate_suite(suite: pf.Suite, suite_dir: str = './', suite_name: str = 'te
     if not os.path.exists(scripts_dir):
         os.makedirs(scripts_dir, exist_ok=True)
 
-    suite.deploy_suite(scripts_dir)
+    #suite.deploy_suite(scripts_dir)
+    suite.deploy_suite()
 
  
 

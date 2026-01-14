@@ -12,6 +12,8 @@ class TestWorkflowTask:
         assert str(tAa1.script) == "echo family_Aa NUMBER=$NUMBER"
         assert tAa1.lookup_variable('NUMBER') == 101
 
+        
+
 #    def test_init_calls_super_with_name_variables_and_script(monkeypatch):
 #        captured = {}
 #

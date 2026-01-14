@@ -1,6 +1,6 @@
 import pyflow as pf
 #.workflow_task import WorkflowTask
-from workflow_task import WorkflowTask
+from .workflow_task import WorkflowTask
 
 class WorkflowAnchorFamily(pf.AnchorFamily):
     #def __init__(self, name: str, famAb_tasks: dict, **kwargs):
