@@ -13,16 +13,16 @@ class TestGenerateSuite:
         # Create a temporary directory for testing
         with tempfile.TemporaryDirectory() as temp_dir:
             suite_dir = os.path.join(temp_dir, 'testSuite')
-            
+
             # Create a simple test suite
             with pf.Suite('testSuite',
                          host=pf.LocalHost('localhost'),
                          files=os.path.join(suite_dir, 'scripts')) as test_suite:
                 pass
-            
+
             # Generate the suite
             generate_suite(test_suite, suite_dir=suite_dir)
-            
+
             # Assert that the directories were created
             assert os.path.exists(os.path.join(suite_dir, 'def')), "def/ directory was not created"
             assert os.path.exists(os.path.join(suite_dir, 'include')), "include/ directory was not created"

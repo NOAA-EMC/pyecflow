@@ -1,7 +1,4 @@
 # imports 
-
-import sys
-import os
 import pyflow as pf
 from pyecflow import read_package_file, WorkflowTask, WorkflowAnchorFamily, generate_suite
 
