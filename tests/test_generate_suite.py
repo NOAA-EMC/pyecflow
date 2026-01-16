@@ -4,6 +4,7 @@ import tempfile
 import pyflow as pf
 from pyecflow.generate_suite import generate_suite
 
+
 class TestGenerateSuite:
 
     def test_generate_suite_creates_directories(self):
@@ -33,4 +34,3 @@ class TestGenerateSuite:
             assert os.path.isdir(os.path.join(suite_dir, 'def')), "def/ is not a directory"
             assert os.path.isdir(os.path.join(suite_dir, 'include')), "include/ is not a directory"
             assert os.path.isdir(os.path.join(suite_dir, 'scripts')), "scripts/ is not a directory"
-
