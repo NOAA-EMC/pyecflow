@@ -18,8 +18,8 @@ class TestGenerateSuite:
 
             # Create a simple test suite
             with pf.Suite('testSuite',
-                         host=pf.LocalHost('localhost'),
-                         files=os.path.join(suite_dir, 'scripts')) as test_suite:
+                          host=pf.LocalHost('localhost'),
+                          files=os.path.join(suite_dir, 'scripts')) as test_suite:
                 pass
 
             # Generate the suite
