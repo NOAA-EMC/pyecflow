@@ -1,3 +1,4 @@
+# imports
 import os
 import tempfile
 import pyflow as pf
@@ -27,8 +28,9 @@ class TestGenerateSuite:
             assert os.path.exists(os.path.join(suite_dir, 'def')), "def/ directory was not created"
             assert os.path.exists(os.path.join(suite_dir, 'include')), "include/ directory was not created"
             assert os.path.exists(os.path.join(suite_dir, 'scripts')), "scripts/ directory was not created"
-            
+
             # Assert that they are directories
             assert os.path.isdir(os.path.join(suite_dir, 'def')), "def/ is not a directory"
             assert os.path.isdir(os.path.join(suite_dir, 'include')), "include/ is not a directory"
             assert os.path.isdir(os.path.join(suite_dir, 'scripts')), "scripts/ is not a directory"
+
