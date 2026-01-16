@@ -34,4 +34,3 @@ class TestGenerateSuite:
             assert os.path.isdir(os.path.join(suite_dir, 'def')), "def/ is not a directory"
             assert os.path.isdir(os.path.join(suite_dir, 'include')), "include/ is not a directory"
             assert os.path.isdir(os.path.join(suite_dir, 'scripts')), "scripts/ is not a directory"
-
