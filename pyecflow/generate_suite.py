@@ -1,12 +1,12 @@
-import sys
+#import sys
 import os
 import pyflow as pf
 
 def generate_suite(suite: pf.Suite, suite_dir: str = './', suite_name: str = 'test_suite'):
     """
-    Generate an EcFlow suite definition file from a given pyflow Suite object and deploy the ecf scripts 
-    and include files to the suite directory. The suite directory is organized as follows: 
-    def/ - contains the suite definition file and also checks that the suite is valid 
+    Generate an EcFlow suite definition file from a given pyflow Suite object and deploy the ecf scripts
+    and include files to the suite directory. The suite directory is organized as follows:
+    def/ - contains the suite definition file and also checks that the suite is valid
     include/ - contains any include files
     scripts/ - contains any ecf script files organized by families as subdirectories if applicable.
 
@@ -26,7 +26,7 @@ def generate_suite(suite: pf.Suite, suite_dir: str = './', suite_name: str = 'te
     scripts_dir = os.path.join(suite_dir, 'scripts')
     include_dir = os.path.join(suite_dir, 'include')
     def_dir = os.path.join(suite_dir, 'def')
-    
+
     # Create def directory
     if not os.path.exists(def_dir):
         os.makedirs(def_dir, exist_ok=True)
@@ -52,8 +52,4 @@ def generate_suite(suite: pf.Suite, suite_dir: str = './', suite_name: str = 'te
 
     #suite.deploy_suite(scripts_dir)
     suite.deploy_suite()
-
- 
-
-
-       
+    
