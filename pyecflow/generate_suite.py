@@ -1,6 +1,7 @@
 import os
 import pyflow as pf
 
+
 def generate_suite(suite: pf.Suite, suite_dir: str = './', suite_name: str = 'test_suite'):
     """
     Generate an EcFlow suite definition file from a given pyflow Suite object and deploy the ecf scripts
