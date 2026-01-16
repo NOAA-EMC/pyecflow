@@ -10,9 +10,6 @@ server_port = 22921  # Anna's personal Ursa EcFlow server port
 with pf.Suite('testSuite',
               host=pf.LocalHost('localhost'),
               files='./testSuite/scripts') as my_suite:
-    # with pf.AnchorFamily('testFamily'):
-        # with pf.Task('testTask', script='echo "test"'):
-            # pass
     pass
 
 # Generate the suite directories by importing and using the generate_suite function
