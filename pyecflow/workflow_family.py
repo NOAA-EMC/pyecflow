@@ -5,8 +5,6 @@ from .workflow_task import WorkflowTask
 
 
 class WorkflowFamily(pf.Family):
-    # def __init__(self, name: str, famAb_tasks: dict, **kwargs):
-        # super().__init__(name, variables=context['variables'])
     def __init__(self, name: str, famAb_tasks: dict = None, **kwargs):
         super().__init__(name)
         task_triggers = {}
