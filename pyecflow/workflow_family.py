@@ -1,7 +1,7 @@
 # imports
 import pyflow as pf
 # .workflow_task import WorkflowTask
-from .workflow_task import WorkflowTask
+from .workflow_task import WorkflowTask  # noqa: F401
 
 
 class WorkflowFamily(pf.Family):
