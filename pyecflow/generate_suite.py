@@ -33,15 +33,15 @@ def generate_suite(suite: pf.Suite, suite_dir: str = './', suite_name: str = 'te
 
     # Save the suite definition file
     suite.check_definition()
-    #suite_def = suite.ecflow_definition()
-    #suite_def.save_as_defs(os.path.join(def_dir, f'{suite_name}.def'))
+    # suite_def = suite.ecflow_definition()
+    # suite_def.save_as_defs(os.path.join(def_dir, f'{suite_name}.def'))
 
     # Create include directory and copy header files
     if not os.path.exists(include_dir):
         os.makedirs(include_dir, exist_ok=True)
 
     # TODO: This needs to be implemented by methods in header.py from pyflow
-    #for header_file in suite.headers:
+    # for header_file in suite.headers:
     #    header_file_path = header_file.filepath
     #    if os.path.exists(header_file_path):
     #        shutil.copy(header_file_path, include_dir)
@@ -50,5 +50,5 @@ def generate_suite(suite: pf.Suite, suite_dir: str = './', suite_name: str = 'te
     if not os.path.exists(scripts_dir):
         os.makedirs(scripts_dir, exist_ok=True)
 
-    #suite.deploy_suite(scripts_dir)
+    # suite.deploy_suite(scripts_dir)
     suite.deploy_suite()
