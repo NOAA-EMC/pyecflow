@@ -1,4 +1,3 @@
-#import sys
 import os
 import pyflow as pf
 
@@ -52,4 +51,3 @@ def generate_suite(suite: pf.Suite, suite_dir: str = './', suite_name: str = 'te
 
     #suite.deploy_suite(scripts_dir)
     suite.deploy_suite()
-    
