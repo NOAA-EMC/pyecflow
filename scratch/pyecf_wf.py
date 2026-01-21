@@ -1,6 +1,12 @@
 # imports
 import pyflow as pf
-from pyecflow import read_package_file, WorkflowTask, WorkflowAnchorFamily, generate_suite  # noqa: F401
+
+from pyecflow import (  # noqa: F401
+    WorkflowAnchorFamily,
+    WorkflowTask,
+    generate_suite,
+    read_package_file,
+)
 
 # set up server
 server_host = 'localhost'
