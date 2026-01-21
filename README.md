@@ -1,4 +1,4 @@
-# pyecFlow
+# pyecflow
 An application to create `ecFlow` suites
 
 ## Installation
