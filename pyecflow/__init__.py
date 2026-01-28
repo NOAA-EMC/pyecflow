@@ -1,6 +1,34 @@
+"""pyecflow - A Python package for creating ecFlow workflows.
+
+This package provides high-level classes and utilities for building ecFlow
+workflows using pyflow. It includes components for creating suites,
+as well as utilities for reading package data and deploying suite definitions.
+
+Main Components
+---------------
+WorkflowSuite : class
+    Top-level container for ecFlow workflows. Includes a generate_suite() method
+    to create suite directory structure and deploy files.
+read_package_file : function
+    Utility for reading package data files (static files and templates).
+
+Attributes
+----------
+__version__ : str
+    Version string for the pyecflow package.
+
+Examples
+--------
+>>> from pyecflow import WorkflowSuite
+>>> suite = WorkflowSuite('my_suite')
+>>> suite.generate_suite(suite_dir='/path/to/suite')
+"""
+
 from __future__ import absolute_import
 
 import importlib.resources
+
+from .workflow_suite import WorkflowSuite
 
 
 def read_package_file(filetype: str, filename: str) -> str:
@@ -37,3 +65,5 @@ try:
 except ImportError:  # pragma: no cover
     # Local copy or not installed with setuptools
     __version__ = ""
+
+__all__ = ["read_package_file", "__version__", "WorkflowSuite"]
