@@ -11,10 +11,6 @@ import pyflow as pf
 
 from pyecflow import WorkflowSuite
 
-# set up server
-server_host = 'localhost'
-server_port = 22921  # Anna's personal Ursa EcFlow server port
-
 
 class TestGenerateSuite:
     """Test suite for the WorkflowSuite.generate_suite() method.
