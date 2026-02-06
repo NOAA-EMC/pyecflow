@@ -30,6 +30,36 @@ class WorkflowSuite(pf.Suite):
     def __init__(self, name: str, *args, **kwargs):
         super().__init__(name, *args, **kwargs)
 
+    def add_anchor_family(self):
+        """Add anchor families directly to the suite.
+
+        This method generates the predefined anchor family hierarchy
+        directly under the suite.
+
+        Examples
+        --------
+        >>> suite = WorkflowSuite('my_suite', host=pf.LocalHost('localhost'))
+        >>> suite.add_anchor_family()
+        >>> suite.generate_suite(suite_dir='./testSuite')
+        """
+        from .workflow_anchorfamily import WorkflowAnchorFamily
+        WorkflowAnchorFamily.generate_anchor_families(self)
+
+    def add_tasks(self):
+        """Add tasks to the anchor families in the suite.
+
+        The anchor families must already exist (call add_anchor_family() first).
+
+        Examples
+        --------
+        >>> suite = WorkflowSuite('my_suite', host=pf.LocalHost('localhost'))
+        >>> suite.add_anchor_family()
+        >>> suite.add_tasks()
+        >>> suite.generate_suite(suite_dir='./testSuite')
+        """
+        from .workflow_task import WorkflowTask
+        WorkflowTask.generate_tasks(self)
+
     def generate_suite(self, suite_dir: str = './'):
         """Generate an ecFlow suite definition file and deploy associated files.
 
@@ -85,6 +115,8 @@ class WorkflowSuite(pf.Suite):
 
         # Save the suite definition file
         self.check_definition()
+        suite_def = self.ecflow_definition()
+        suite_def.save_as_defs(os.path.join(def_dir, f'{self.name}.def'))
 
         # Create include directory and copy header files
         if not os.path.exists(include_dir):
@@ -100,4 +132,24 @@ class WorkflowSuite(pf.Suite):
         if not os.path.exists(scripts_dir):
             os.makedirs(scripts_dir, exist_ok=True)
 
+        # Create directories for all anchor families under scripts/
+        self._create_family_directories(self, scripts_dir)
+
         self.deploy_suite()
+
+    @staticmethod
+    def _create_family_directories(node, base_dir):
+        """Recursively create directories for all AnchorFamily children.
+
+        Parameters
+        ----------
+        node : pf.Node
+            The parent node whose children to process.
+        base_dir : str
+            The directory under which to create family subdirectories.
+        """
+        for child in node.children:
+            if isinstance(child, pf.AnchorFamily):
+                child_dir = os.path.join(base_dir, child.name)
+                os.makedirs(child_dir, exist_ok=True)
+                WorkflowSuite._create_family_directories(child, child_dir)
