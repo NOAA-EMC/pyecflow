@@ -37,7 +37,7 @@ class TestGenerateAnchorFamily:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        my_suite.add_anchor_family()
+        WorkflowAnchorFamily.generate_anchor_families(my_suite)
         my_suite.generate_suite(suite_dir=suite_dir)
 
         # Print the directory tree
@@ -81,7 +81,7 @@ class TestGenerateAnchorFamily:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        my_suite.add_anchor_family()
+        WorkflowAnchorFamily.generate_anchor_families(my_suite)
         my_suite.generate_suite(suite_dir=suite_dir)
 
         # Print the directory tree

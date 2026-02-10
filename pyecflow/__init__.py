@@ -1,14 +1,21 @@
 """pyecflow - A Python package for creating ecFlow workflows.
 
 This package provides high-level classes and utilities for building ecFlow
-workflows using pyflow. It includes components for creating suites,
-as well as utilities for reading package data and deploying suite definitions.
+workflows using pyflow. It includes components for creating suites, anchor
+families, and tasks, as well as utilities for reading package data and
+deploying suite definitions.
 
 Main Components
 ---------------
 WorkflowSuite : class
     Top-level container for ecFlow workflows. Includes a generate_suite() method
     to create suite directory structure and deploy files.
+WorkflowAnchorFamily : class
+    Anchor family for organizing workflow hierarchy. Use generate_anchor_families()
+    to create family structures under a suite.
+WorkflowTask : class
+    Task definition within a workflow. Use generate_tasks() to populate anchor
+    families with tasks.
 read_package_file : function
     Utility for reading package data files (static files and templates).
 
@@ -20,7 +27,10 @@ __version__ : str
 Examples
 --------
 >>> from pyecflow import WorkflowSuite
->>> suite = WorkflowSuite('my_suite')
+>>> from pyecflow.workflow_task import WorkflowTask
+>>> suite = WorkflowSuite('my_suite', host=pf.LocalHost('localhost'))
+>>> suite.add_anchor_family()  # Creates default family hierarchy
+>>> WorkflowTask.generate_tasks(suite)  # Populates families with tasks
 >>> suite.generate_suite(suite_dir='/path/to/suite')
 """
 
@@ -28,8 +38,8 @@ from __future__ import absolute_import
 
 import importlib.resources
 
-from .workflow_suite import WorkflowSuite
 from .workflow_anchorfamily import WorkflowAnchorFamily
+from .workflow_suite import WorkflowSuite
 from .workflow_task import WorkflowTask
 
 

@@ -30,35 +30,29 @@ class WorkflowSuite(pf.Suite):
     def __init__(self, name: str, *args, **kwargs):
         super().__init__(name, *args, **kwargs)
 
-    def add_anchor_family(self):
+    def add_anchor_family(self, families=None):
         """Add anchor families directly to the suite.
 
-        This method generates the predefined anchor family hierarchy
-        directly under the suite.
+        This method generates an anchor family hierarchy directly under the suite.
+
+        Parameters
+        ----------
+        families : dict, optional
+            Dictionary mapping family names to lists of child family names.
+            If None, uses the default family structure.
 
         Examples
         --------
+        >>> # Using default structure
         >>> suite = WorkflowSuite('my_suite', host=pf.LocalHost('localhost'))
         >>> suite.add_anchor_family()
-        >>> suite.generate_suite(suite_dir='./testSuite')
+
+        >>> # Using custom structure from config
+        >>> config = {'family_X': ['family_X1', 'family_X2']}
+        >>> suite.add_anchor_family(config)
         """
         from .workflow_anchorfamily import WorkflowAnchorFamily
-        WorkflowAnchorFamily.generate_anchor_families(self)
-
-    def add_tasks(self):
-        """Add tasks to the anchor families in the suite.
-
-        The anchor families must already exist (call add_anchor_family() first).
-
-        Examples
-        --------
-        >>> suite = WorkflowSuite('my_suite', host=pf.LocalHost('localhost'))
-        >>> suite.add_anchor_family()
-        >>> suite.add_tasks()
-        >>> suite.generate_suite(suite_dir='./testSuite')
-        """
-        from .workflow_task import WorkflowTask
-        WorkflowTask.generate_tasks(self)
+        WorkflowAnchorFamily.generate_anchor_families(self, families)
 
     def generate_suite(self, suite_dir: str = './'):
         """Generate an ecFlow suite definition file and deploy associated files.

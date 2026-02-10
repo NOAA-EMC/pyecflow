@@ -42,16 +42,16 @@ class TestWorkflowTask:
 
         Verifies the task hierarchy:
         - family_A
-          - task_A1
           - family_Aa
             - task_Aa1
           - family_Ab
             - task_Ab1
             - task_Ab2
+          - task_A1
         - family_B
-          - task_B1
           - family_Ba
             - task_Ba1
+          - task_B1
         """
         suite_dir = tmp_path / "testSuite"
         print(f"\nSuite directory: {suite_dir}")
@@ -63,8 +63,15 @@ class TestWorkflowTask:
         WorkflowTask.generate_tasks(my_suite)
         my_suite.generate_suite(suite_dir=suite_dir)
 
+        # Print the .def file to show actual ecFlow node order
+        def_file = suite_dir / 'def' / 'testSuite.def'
+        print("\n--- ecFlow definition (shows actual order) ---")
+        with open(def_file) as f:
+            print(f.read())
+        print("--- end of .def file ---")
+
         # Print the directory tree
-        print("\nDirectory tree:")
+        print("\nDirectory tree (filesystem order, NOT ecFlow order):")
         for root, dirs, files in os.walk(suite_dir):
             level = len(root.replace(str(suite_dir), '').split(os.sep)) - 1
             indent = '  ' * level
@@ -113,16 +120,16 @@ class TestWorkflowTask:
         Verifies the file structure:
         scripts/
           family_A/
-            task_A1.ecf
             family_Aa/
               task_Aa1.ecf
             family_Ab/
               task_Ab1.ecf
               task_Ab2.ecf
+            task_A1.ecf
           family_B/
-            task_B1.ecf
             family_Ba/
               task_Ba1.ecf
+            task_B1.ecf
         """
         suite_dir = tmp_path / "testSuite"
         print(f"\nSuite directory: {suite_dir}")
