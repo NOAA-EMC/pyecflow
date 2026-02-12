@@ -12,7 +12,6 @@ import pyflow as pf
 
 from pyecflow import WorkflowAnchorFamily, WorkflowSuite
 
-
 # Default family structure for testing
 DEFAULT_FAMILIES = {
     'family_A': ['family_Aa', 'family_Ab'],
@@ -48,7 +47,7 @@ class TestGenerateAnchorFamily:
         WorkflowSuite.generate_anchor_families(my_suite, DEFAULT_FAMILIES) #pass in families to the suite
 
         my_suite.generate_suite(suite_dir=suite_dir)
-        
+
         # Print the directory tree
         print("\nDirectory tree:")
         for root, dirs, files in os.walk(suite_dir):

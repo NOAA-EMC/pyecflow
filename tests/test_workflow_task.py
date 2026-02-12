@@ -3,7 +3,7 @@
 This module contains pytest tests for the WorkflowTask class,
 verifying that tasks are initialized correctly with their context
 (variables and script), and that tasks are correctly added to
-anchor families using WorkflowTask.generate_tasks().
+anchor families using WorkflowSuite.generate_tasks().
 """
 
 # imports first
@@ -13,7 +13,6 @@ import pyflow as pf
 
 from pyecflow import WorkflowSuite
 from pyecflow.workflow_task import WorkflowTask
-
 
 # Default family structure for testing
 DEFAULT_FAMILIES = {
@@ -118,8 +117,8 @@ class TestWorkflowTask:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        my_suite.add_anchor_family(DEFAULT_FAMILIES)
-        WorkflowSuite.generate_tasks(my_suite, DEFAULT_TASKS)
+        families = my_suite.add_anchor_family(DEFAULT_FAMILIES)
+        WorkflowSuite.generate_tasks(families, DEFAULT_TASKS)
         my_suite.generate_suite(suite_dir=suite_dir)
 
         # Print the .def file to show actual ecFlow node order
@@ -159,8 +158,8 @@ class TestWorkflowTask:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        my_suite.add_anchor_family(DEFAULT_FAMILIES)
-        WorkflowSuite.generate_tasks(my_suite, DEFAULT_TASKS)
+        families = my_suite.add_anchor_family(DEFAULT_FAMILIES)
+        WorkflowSuite.generate_tasks(families, DEFAULT_TASKS)
         my_suite.generate_suite(suite_dir=suite_dir)
 
         # Check variables on family_A tasks
@@ -196,8 +195,8 @@ class TestWorkflowTask:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        my_suite.add_anchor_family(DEFAULT_FAMILIES)
-        WorkflowSuite.generate_tasks(my_suite, DEFAULT_TASKS)
+        families = my_suite.add_anchor_family(DEFAULT_FAMILIES)
+        WorkflowSuite.generate_tasks(families, DEFAULT_TASKS)
         my_suite.generate_suite(suite_dir=suite_dir)
 
         # Print the directory tree

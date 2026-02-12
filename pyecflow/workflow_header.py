@@ -7,7 +7,6 @@ found, they are copied from the package's static/ directory.
 
 import os
 
-
 # Header files that should be present in the include/ directory
 HEADER_FILES = ['head.h', 'envir-p1.h', 'tail.h']
 
