@@ -15,6 +15,65 @@ from pyecflow import WorkflowSuite
 from pyecflow.workflow_task import WorkflowTask
 
 
+# Default family structure for testing
+DEFAULT_FAMILIES = {
+    'family_A': ['family_Aa', 'family_Ab'],
+    'family_B': ['family_Ba'],
+}
+
+# Default task structure for testing
+DEFAULT_TASKS = {
+    'family_A': {
+        'tasks': {
+            'task_A1': {
+                'variables': {'NUMBER': 1},
+                'script': 'echo family_A task_A1 NUMBER=$NUMBER',
+            },
+        },
+        'children': {
+            'family_Aa': {
+                'tasks': {
+                    'task_Aa1': {
+                        'variables': {'NUMBER': 11},
+                        'script': 'echo family_Aa task_Aa1 NUMBER=$NUMBER',
+                    },
+                },
+            },
+            'family_Ab': {
+                'tasks': {
+                    'task_Ab1': {
+                        'variables': {'NUMBER': 21},
+                        'script': 'echo family_Ab task_Ab1 NUMBER=$NUMBER',
+                    },
+                    'task_Ab2': {
+                        'variables': {'NUMBER': 22},
+                        'script': 'echo family_Ab task_Ab2 NUMBER=$NUMBER',
+                    },
+                },
+            },
+        },
+    },
+    'family_B': {
+        'tasks': {
+            'task_B1': {
+                'variables': {'NUMBER': 1},
+                'script': 'echo family_B task_B1 NUMBER=$NUMBER',
+            },
+        },
+        'children': {
+            'family_Ba': {
+                'tasks': {
+                    'task_Ba1': {
+                        'variables': {'NUMBER': 11},
+                        'script': 'echo family_Ba task_Ba1 NUMBER=$NUMBER',
+                    },
+                },
+            },
+        },
+    },
+}
+
+
 class TestWorkflowTask:
     """Test suite for the WorkflowTask class.
 
@@ -59,8 +118,8 @@ class TestWorkflowTask:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        my_suite.add_anchor_family()
-        WorkflowTask.generate_tasks(my_suite)
+        my_suite.add_anchor_family(DEFAULT_FAMILIES)
+        WorkflowSuite.generate_tasks(my_suite, DEFAULT_TASKS)
         my_suite.generate_suite(suite_dir=suite_dir)
 
         # Print the .def file to show actual ecFlow node order
@@ -100,8 +159,8 @@ class TestWorkflowTask:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        my_suite.add_anchor_family()
-        WorkflowTask.generate_tasks(my_suite)
+        my_suite.add_anchor_family(DEFAULT_FAMILIES)
+        WorkflowSuite.generate_tasks(my_suite, DEFAULT_TASKS)
         my_suite.generate_suite(suite_dir=suite_dir)
 
         # Check variables on family_A tasks
@@ -137,8 +196,8 @@ class TestWorkflowTask:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        my_suite.add_anchor_family()
-        WorkflowTask.generate_tasks(my_suite)
+        my_suite.add_anchor_family(DEFAULT_FAMILIES)
+        WorkflowSuite.generate_tasks(my_suite, DEFAULT_TASKS)
         my_suite.generate_suite(suite_dir=suite_dir)
 
         # Print the directory tree

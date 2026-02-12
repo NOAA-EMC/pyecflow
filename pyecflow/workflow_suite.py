@@ -9,6 +9,9 @@ import os
 
 import pyflow as pf
 
+from .workflow_anchorfamily import WorkflowAnchorFamily
+from .workflow_task import WorkflowTask
+
 
 class WorkflowSuite(pf.Suite):
     """A workflow suite that extends pyflow's Suite.
@@ -30,29 +33,103 @@ class WorkflowSuite(pf.Suite):
     def __init__(self, name: str, *args, **kwargs):
         super().__init__(name, *args, **kwargs)
 
-    def add_anchor_family(self, families=None):
+    def add_anchor_family(self, families):
         """Add anchor families directly to the suite.
 
         This method generates an anchor family hierarchy directly under the suite.
 
         Parameters
         ----------
-        families : dict, optional
+        families : dict
             Dictionary mapping family names to lists of child family names.
-            If None, uses the default family structure.
 
         Examples
         --------
-        >>> # Using default structure
-        >>> suite = WorkflowSuite('my_suite', host=pf.LocalHost('localhost'))
-        >>> suite.add_anchor_family()
-
         >>> # Using custom structure from config
         >>> config = {'family_X': ['family_X1', 'family_X2']}
         >>> suite.add_anchor_family(config)
         """
-        from .workflow_anchorfamily import WorkflowAnchorFamily
-        WorkflowAnchorFamily.generate_anchor_families(self, families)
+        WorkflowSuite.generate_anchor_families(self, families)
+
+    @staticmethod
+    def generate_anchor_families(parent, families):
+        """Generate the anchor family structure under a parent node.
+
+        Creates a hierarchical structure of anchor families directly
+        under the given parent.
+
+        Parameters
+        ----------
+        parent : pf.Suite or pf.AnchorFamily
+            The parent node to add anchor families to.
+        families : dict
+            Dictionary mapping family names to lists of child family names.
+
+        Examples
+        --------
+        >>> # Using custom structure from config
+        >>> config = {'family_X': ['family_X1', 'family_X2']}
+        >>> WorkflowSuite.generate_anchor_families(suite, config)
+        """
+        for fam_name, children in families.items():
+            with parent:
+                fam = pf.AnchorFamily(fam_name)
+            for child_name in children:
+                with fam:
+                    pf.AnchorFamily(child_name)
+
+    @staticmethod
+    def generate_tasks(suite, tasks):
+        """Add tasks to the anchor families in the suite.
+
+        Creates WorkflowTask instances within each anchor family
+        based on the task dictionary. The anchor families must already
+        exist on the suite before calling this method.
+
+        Child families are processed before tasks at each level, ensuring
+        that in the ecFlow definition, nested families appear before
+        sibling tasks.
+
+        Parameters
+        ----------
+        suite : pf.Suite
+            The suite containing the anchor families to add tasks to.
+        tasks : dict
+            Dictionary mapping family names to their task/children config.
+
+        Examples
+        --------
+        >>> # Using custom structure from config
+        >>> config = load_yaml('tasks.yml')
+        >>> WorkflowSuite.generate_tasks(suite, config)
+        """
+        WorkflowSuite._add_tasks_to_families(suite, tasks)
+
+    @staticmethod
+    def _add_tasks_to_families(parent, family_tasks):
+        """Recursively add tasks to existing anchor families.
+
+        Processes child families before adding tasks at each level to ensure
+        proper ordering in the ecFlow definition (children appear before
+        sibling tasks).
+
+        Parameters
+        ----------
+        parent : pf.Suite or pf.AnchorFamily
+            The parent node containing the families.
+        family_tasks : dict
+            Dictionary mapping family names to their task/children config.
+        """
+        for fam_name, fam_config in family_tasks.items():
+            fam = getattr(parent, fam_name)
+            # Recurse into child families first
+            children = fam_config.get('children', {})
+            if children:
+                WorkflowSuite._add_tasks_to_families(fam, children)
+            # Add tasks to this family after children
+            for task_name, task_context in fam_config.get('tasks', {}).items():
+                with fam:
+                    WorkflowTask(task_name, task_context)
 
     def generate_suite(self, suite_dir: str = './'):
         """Generate an ecFlow suite definition file and deploy associated files.
@@ -126,24 +203,4 @@ class WorkflowSuite(pf.Suite):
         if not os.path.exists(scripts_dir):
             os.makedirs(scripts_dir, exist_ok=True)
 
-        # Create directories for all anchor families under scripts/
-        self._create_family_directories(self, scripts_dir)
-
         self.deploy_suite()
-
-    @staticmethod
-    def _create_family_directories(node, base_dir):
-        """Recursively create directories for all AnchorFamily children.
-
-        Parameters
-        ----------
-        node : pf.Node
-            The parent node whose children to process.
-        base_dir : str
-            The directory under which to create family subdirectories.
-        """
-        for child in node.children:
-            if isinstance(child, pf.AnchorFamily):
-                child_dir = os.path.join(base_dir, child.name)
-                os.makedirs(child_dir, exist_ok=True)
-                WorkflowSuite._create_family_directories(child, child_dir)

@@ -13,6 +13,13 @@ import pyflow as pf
 from pyecflow import WorkflowAnchorFamily, WorkflowSuite
 
 
+# Default family structure for testing
+DEFAULT_FAMILIES = {
+    'family_A': ['family_Aa', 'family_Ab'],
+    'family_B': ['family_Ba'],
+}
+
+
 class TestGenerateAnchorFamily:
     """Test suite for the WorkflowAnchorFamily class.
 
@@ -37,9 +44,11 @@ class TestGenerateAnchorFamily:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        WorkflowAnchorFamily.generate_anchor_families(my_suite)
-        my_suite.generate_suite(suite_dir=suite_dir)
+        # waf = WorkflowAnchorFamily.generate_anchor_families(my_suite) #taking a suite
+        WorkflowSuite.generate_anchor_families(my_suite, DEFAULT_FAMILIES) #pass in families to the suite
 
+        my_suite.generate_suite(suite_dir=suite_dir)
+        
         # Print the directory tree
         print("\nDirectory tree:")
         for root, dirs, files in os.walk(suite_dir):
@@ -61,57 +70,56 @@ class TestGenerateAnchorFamily:
         assert fam_B is not None, "family_B was not created"
         assert fam_B.family_Ba is not None, "family_Ba was not created"
 
-    def test_anchor_family_directories_created(self, tmp_path):
-        """Test that anchor family directories are created when suite is generated.
+    def test_deploy_paths(self, tmp_path):
+        """Test that tasks in anchor families get correct deploy paths.
 
-        Verifies the directory structure:
-        def/
-          testSuite.def
-        include/
-        scripts/
-          family_A/
-            family_Aa/
-            family_Ab/
-          family_B/
-            family_Ba/
+        AnchorFamilies affect where .ecf files are deployed:
+        - Tasks in anchor families: scripts/family_A/task_A1.ecf
+        - Tasks in nested anchor families: scripts/family_A/family_Aa/task_Aa1.ecf
         """
         suite_dir = tmp_path / "testSuite"
-        print(f"\nSuite directory: {suite_dir}")
 
-        my_suite = WorkflowSuite('testSuite',
-                                 host=pf.LocalHost('localhost'),
-                                 files=str(suite_dir / 'scripts'))
-        WorkflowAnchorFamily.generate_anchor_families(my_suite)
-        my_suite.generate_suite(suite_dir=suite_dir)
+        with WorkflowSuite('testSuite',
+                           host=pf.LocalHost('localhost'),
+                           files=str(suite_dir / 'scripts')) as my_suite:
+            with pf.AnchorFamily('family_A') as fam_A:
+                t1 = pf.Task('task_A1', script='echo A1')
+                with pf.AnchorFamily('family_Aa'):
+                    t2 = pf.Task('task_Aa1', script='echo Aa1')
 
-        # Print the directory tree
-        print("\nDirectory tree:")
-        for root, dirs, files in os.walk(suite_dir):
-            level = len(root.replace(str(suite_dir), '').split(os.sep)) - 1
-            indent = '  ' * level
-            print(f"{indent}{os.path.basename(root)}/")
-            subindent = '  ' * (level + 1)
-            for f in files:
-                print(f"{subindent}{f}")
+        scripts_dir = str(suite_dir / 'scripts')
+        assert t1.deploy_path == f"{scripts_dir}/family_A/task_A1.ecf"
+        assert t2.deploy_path == f"{scripts_dir}/family_A/family_Aa/task_Aa1.ecf"
 
-        # Check def directory and .def file
-        assert os.path.isdir(suite_dir / 'def'), "def/ directory was not created"
-        assert os.path.isfile(suite_dir / 'def' / 'testSuite.def'), "testSuite.def was not created"
+    def test_executable_children(self):
+        """Test that executable_children returns only tasks and families."""
+        with WorkflowSuite('testSuite', host=pf.LocalHost('localhost')) as my_suite:
+            with pf.AnchorFamily('family_A') as fam_A:
+                pf.Variable('VAR1', 'value1')
+                t1 = pf.Task('task_A1', script='echo A1')
+                with pf.AnchorFamily('family_Aa'):
+                    t2 = pf.Task('task_Aa1', script='echo Aa1')
+                t3 = pf.Task('task_A2', script='echo A2')
 
-        # Check include directory
-        assert os.path.isdir(suite_dir / 'include'), "include/ directory was not created"
+        children = fam_A.executable_children
+        names = set([c.name for c in children])
 
-        # Check scripts directory
-        scripts_dir = suite_dir / 'scripts'
-        assert os.path.isdir(scripts_dir), "scripts/ directory was not created"
+        # Should include tasks and families, but NOT variables
+        assert names == {'task_A1', 'family_Aa', 'task_A2'}
 
-        # Check family_A and its children
-        assert os.path.isdir(scripts_dir / 'family_A'), "family_A/ directory was not created"
-        assert os.path.isdir(scripts_dir / 'family_A' / 'family_Aa'), "family_Aa/ directory was not created"
-        assert os.path.isdir(scripts_dir / 'family_A' / 'family_Ab'), "family_Ab/ directory was not created"
+    def test_children_includes_all(self):
+        """Test that children returns all direct children including variables."""
+        with WorkflowSuite('testSuite', host=pf.LocalHost('localhost')) as my_suite:
+            with pf.AnchorFamily('family_A') as fam_A:
+                pf.Variable('VAR1', 'value1')
+                t1 = pf.Task('task_A1', script='echo A1')
+                with pf.AnchorFamily('family_Aa'):
+                    t2 = pf.Task('task_Aa1', script='echo Aa1')
 
-        # Check family_B and its child
-        assert os.path.isdir(scripts_dir / 'family_B'), "family_B/ directory was not created"
-        assert os.path.isdir(scripts_dir / 'family_B' / 'family_Ba'), "family_Ba/ directory was not created"
+        children = fam_A.children
+        names = set([c.name for c in children])
 
-        print("\nAll anchor family directories created successfully!")
+        # Should include everything: variables, tasks, families, and auto-generated attributes
+        assert 'VAR1' in names
+        assert 'task_A1' in names
+        assert 'family_Aa' in names
