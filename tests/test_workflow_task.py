@@ -114,10 +114,14 @@ class TestWorkflowTask:
         suite_dir = tmp_path / "testSuite"
         print(f"\nSuite directory: {suite_dir}")
 
-        my_suite = WorkflowSuite('testSuite',
-                                 host=pf.LocalHost('localhost'),
-                                 files=str(suite_dir / 'scripts'))
-        families = my_suite.add_anchor_family(DEFAULT_FAMILIES)
+        # TODO: should provide a config right here, config is attr
+        my_suite = WorkflowSuite(
+            'testSuite',
+            host=pf.LocalHost('localhost'),
+            files=str(suite_dir / 'scripts'))
+        # TODO: fix dict, pull fams from config
+        families = my_suite.generate_anchor_families(DEFAULT_FAMILIES)
+        # TODO: fix dict, pull tasks from config
         WorkflowSuite.generate_tasks(families, DEFAULT_TASKS)
         my_suite.generate_suite(suite_dir=suite_dir)
 
@@ -158,7 +162,7 @@ class TestWorkflowTask:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        families = my_suite.add_anchor_family(DEFAULT_FAMILIES)
+        families = my_suite.generate_anchor_families(DEFAULT_FAMILIES)
         WorkflowSuite.generate_tasks(families, DEFAULT_TASKS)
         my_suite.generate_suite(suite_dir=suite_dir)
 
@@ -195,7 +199,7 @@ class TestWorkflowTask:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        families = my_suite.add_anchor_family(DEFAULT_FAMILIES)
+        families = my_suite.generate_anchor_families(DEFAULT_FAMILIES)
         WorkflowSuite.generate_tasks(families, DEFAULT_TASKS)
         my_suite.generate_suite(suite_dir=suite_dir)
 

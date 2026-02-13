@@ -9,7 +9,6 @@ import os
 
 import pyflow as pf
 
-from .workflow_anchorfamily import WorkflowAnchorFamily
 from .workflow_task import WorkflowTask
 
 
@@ -32,8 +31,8 @@ class WorkflowSuite(pf.Suite):
 
     def __init__(self, name: str, *args, **kwargs):
         super().__init__(name, *args, **kwargs)
-
-    def add_anchor_family(self, families):
+    # don't need this method
+    # def add_anchor_family(self, families):
         """Add anchor families directly to the suite.
 
         This method generates an anchor family hierarchy directly under the suite
@@ -55,10 +54,9 @@ class WorkflowSuite(pf.Suite):
         >>> families = suite.add_anchor_family(config)
         >>> WorkflowSuite.generate_tasks(families, tasks_config)
         """
-        return WorkflowSuite.generate_anchor_families(self, families)
+        # return self.generate_anchor_families(families)
 
-    @staticmethod
-    def generate_anchor_families(suite, families):
+    def generate_anchor_families(self, families):
         """Generate the anchor family structure under a suite.
 
         Creates a hierarchical structure of anchor families directly
@@ -84,7 +82,7 @@ class WorkflowSuite(pf.Suite):
         """
         created_families = {}
         for fam_name, children in families.items():
-            with suite:
+            with self:  # check if self is ok, or better way
                 fam = pf.AnchorFamily(fam_name)
             created_families[fam_name] = fam
             for child_name in children:

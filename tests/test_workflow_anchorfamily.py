@@ -10,7 +10,7 @@ import os
 
 import pyflow as pf
 
-from pyecflow import WorkflowAnchorFamily, WorkflowSuite
+from pyecflow import WorkflowSuite
 
 # Default family structure for testing
 DEFAULT_FAMILIES = {
@@ -44,7 +44,7 @@ class TestGenerateAnchorFamily:
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
         # waf = WorkflowAnchorFamily.generate_anchor_families(my_suite) #taking a suite
-        WorkflowSuite.generate_anchor_families(my_suite, DEFAULT_FAMILIES) #pass in families to the suite
+        my_suite.generate_anchor_families(DEFAULT_FAMILIES)  # pass in families to the suite
 
         my_suite.generate_suite(suite_dir=suite_dir)
 
@@ -80,8 +80,8 @@ class TestGenerateAnchorFamily:
 
         with WorkflowSuite('testSuite',
                            host=pf.LocalHost('localhost'),
-                           files=str(suite_dir / 'scripts')) as my_suite:
-            with pf.AnchorFamily('family_A') as fam_A:
+                           files=str(suite_dir / 'scripts')):
+            with pf.AnchorFamily('family_A'):
                 t1 = pf.Task('task_A1', script='echo A1')
                 with pf.AnchorFamily('family_Aa'):
                     t2 = pf.Task('task_Aa1', script='echo Aa1')
@@ -92,33 +92,38 @@ class TestGenerateAnchorFamily:
 
     def test_executable_children(self):
         """Test that executable_children returns only tasks and families."""
-        with WorkflowSuite('testSuite', host=pf.LocalHost('localhost')) as my_suite:
+        with WorkflowSuite('testSuite', host=pf.LocalHost('localhost')):
             with pf.AnchorFamily('family_A') as fam_A:
                 pf.Variable('VAR1', 'value1')
                 t1 = pf.Task('task_A1', script='echo A1')
-                with pf.AnchorFamily('family_Aa'):
+                with pf.AnchorFamily('family_Aa') as fam_Aa:
                     t2 = pf.Task('task_Aa1', script='echo Aa1')
                 t3 = pf.Task('task_A2', script='echo A2')
 
         children = fam_A.executable_children
-        names = set([c.name for c in children])
 
         # Should include tasks and families, but NOT variables
-        assert names == {'task_A1', 'family_Aa', 'task_A2'}
+        # Use 'is' for identity checks since pyflow objects override __eq__
+        assert any(c is t1 for c in children)
+        assert any(c is fam_Aa for c in children)
+        assert any(c is t3 for c in children)
+        assert not any(c is t2 for c in children)  # t2 is inside fam_Aa, not a direct child
+        assert len(children) == 3
 
     def test_children_includes_all(self):
         """Test that children returns all direct children including variables."""
-        with WorkflowSuite('testSuite', host=pf.LocalHost('localhost')) as my_suite:
+        with WorkflowSuite('testSuite', host=pf.LocalHost('localhost')):
             with pf.AnchorFamily('family_A') as fam_A:
-                pf.Variable('VAR1', 'value1')
+                var1 = pf.Variable('VAR1', 'value1')
                 t1 = pf.Task('task_A1', script='echo A1')
-                with pf.AnchorFamily('family_Aa'):
+                with pf.AnchorFamily('family_Aa') as fam_Aa:
                     t2 = pf.Task('task_Aa1', script='echo Aa1')
 
         children = fam_A.children
-        names = set([c.name for c in children])
 
-        # Should include everything: variables, tasks, families, and auto-generated attributes
-        assert 'VAR1' in names
-        assert 'task_A1' in names
-        assert 'family_Aa' in names
+        # Should include everything: variables, tasks, families
+        # Use 'is' for identity checks since pyflow objects override __eq__
+        assert any(c is var1 for c in children)
+        assert any(c is t1 for c in children)
+        assert any(c is fam_Aa for c in children)
+        assert not any(c is t2 for c in children)  # t2 is inside fam_Aa, not a direct child
