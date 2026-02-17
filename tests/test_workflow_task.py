@@ -15,13 +15,13 @@ from pyecflow import WorkflowSuite
 from pyecflow.workflow_task import WorkflowTask
 
 # Default family structure for testing
-DEFAULT_FAMILIES = {
+fam_test_dict = {
     'family_A': ['family_Aa', 'family_Ab'],
     'family_B': ['family_Ba'],
 }
 
 # Default task structure for testing
-DEFAULT_TASKS = {
+task_test_dict = {
     'family_A': {
         'tasks': {
             'task_A1': {
@@ -120,9 +120,9 @@ class TestWorkflowTask:
             host=pf.LocalHost('localhost'),
             files=str(suite_dir / 'scripts'))
         # TODO: fix dict, pull fams from config
-        families = my_suite.generate_anchor_families(DEFAULT_FAMILIES)
+        dict_of_all_family_objs = my_suite.generate_anchor_families(fam_test_dict)
         # TODO: fix dict, pull tasks from config
-        WorkflowSuite.generate_tasks(families, DEFAULT_TASKS)
+        WorkflowSuite.generate_tasks(dict_of_all_family_objs, task_test_dict)
         my_suite.generate_suite(suite_dir=suite_dir)
 
         # Print the .def file to show actual ecFlow node order
@@ -162,8 +162,8 @@ class TestWorkflowTask:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        families = my_suite.generate_anchor_families(DEFAULT_FAMILIES)
-        WorkflowSuite.generate_tasks(families, DEFAULT_TASKS)
+        dict_of_all_family_objs = my_suite.generate_anchor_families(fam_test_dict)
+        WorkflowSuite.generate_tasks(dict_of_all_family_objs, task_test_dict)
         my_suite.generate_suite(suite_dir=suite_dir)
 
         # Check variables on family_A tasks
@@ -199,8 +199,8 @@ class TestWorkflowTask:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        families = my_suite.generate_anchor_families(DEFAULT_FAMILIES)
-        WorkflowSuite.generate_tasks(families, DEFAULT_TASKS)
+        dict_of_all_family_objs = my_suite.generate_anchor_families(fam_test_dict)
+        WorkflowSuite.generate_tasks(dict_of_all_family_objs, task_test_dict)
         my_suite.generate_suite(suite_dir=suite_dir)
 
         # Print the directory tree

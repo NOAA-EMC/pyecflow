@@ -29,8 +29,8 @@ Examples
 >>> from pyecflow import WorkflowSuite
 >>> from pyecflow.workflow_task import WorkflowTask
 >>> suite = WorkflowSuite('my_suite', host=pf.LocalHost('localhost'))
->>> families = suite.add_anchor_family(families_config)  # Creates family hierarchy
->>> WorkflowSuite.generate_tasks(families, tasks_config)  # Populates families with tasks
+>>> dict_of_all_family_objs = suite.add_anchor_family(families_config)  # Creates family hierarchy
+>>> WorkflowSuite.generate_tasks(dict_of_all_family_objs, tasks_config)  # Populates families with tasks
 >>> suite.generate_suite(suite_dir='/path/to/suite')
 """
 

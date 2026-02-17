@@ -13,7 +13,7 @@ import pyflow as pf
 from pyecflow import WorkflowSuite
 
 # Default family structure for testing
-DEFAULT_FAMILIES = {
+fam_test_dict = {
     'family_A': ['family_Aa', 'family_Ab'],
     'family_B': ['family_Ba'],
 }
@@ -44,7 +44,7 @@ class TestGenerateAnchorFamily:
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
         # waf = WorkflowAnchorFamily.generate_anchor_families(my_suite) #taking a suite
-        my_suite.generate_anchor_families(DEFAULT_FAMILIES)  # pass in families to the suite
+        my_suite.generate_anchor_families(fam_test_dict)  # pass in families to the suite
 
         my_suite.generate_suite(suite_dir=suite_dir)
 

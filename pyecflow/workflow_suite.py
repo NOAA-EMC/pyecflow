@@ -18,45 +18,9 @@ class WorkflowSuite(pf.Suite):
     This class represents a suite in an ecFlow workflow. A suite is the top-level
     container in the ecFlow hierarchy and can contain families and tasks. Each
     suite is independent and can be loaded and run separately.
-
-    Parameters
-    ----------
-    name : str
-        The name of the suite.
-    *args
-        Variable length argument list to pass to the parent Suite class.
-    **kwargs
-        Arbitrary keyword arguments to pass to the parent Suite class.
     """
 
-    def __init__(self, name: str, *args, **kwargs):
-        super().__init__(name, *args, **kwargs)
-    # don't need this method
-    # def add_anchor_family(self, families):
-        """Add anchor families directly to the suite.
-
-        This method generates an anchor family hierarchy directly under the suite
-        and returns the created families for later use.
-
-        Parameters
-        ----------
-        families : dict
-            Dictionary mapping family names to lists of child family names.
-
-        Returns
-        -------
-        dict
-            Dictionary mapping family names to the created AnchorFamily objects.
-
-        Examples
-        --------
-        >>> config = {'family_X': ['family_X1', 'family_X2']}
-        >>> families = suite.add_anchor_family(config)
-        >>> WorkflowSuite.generate_tasks(families, tasks_config)
-        """
-        # return self.generate_anchor_families(families)
-
-    def generate_anchor_families(self, families):
+    def generate_anchor_families(self, dict_fam_map):
         """Generate the anchor family structure under a suite.
 
         Creates a hierarchical structure of anchor families directly
@@ -64,35 +28,33 @@ class WorkflowSuite(pf.Suite):
 
         Parameters
         ----------
-        suite : pf.Suite
-            The suite to add anchor families to.
-        families : dict
-            Dictionary mapping family names to lists of child family names.
+        dict_fam_map : dict
+            Dictionary mapping parent names to lists of child names.
 
         Returns
         -------
         dict
-            Dictionary mapping family names to the created AnchorFamily objects.
+            Dictionary mapping parent names to the created AnchorFamily objects.
 
         Examples
         --------
         >>> config = {'family_X': ['family_X1', 'family_X2']}
-        >>> families = WorkflowSuite.generate_anchor_families(suite, config)
-        >>> WorkflowSuite.generate_tasks(families, tasks_config)
+        >>> dict_of_all_family_objs = suite.generate_anchor_families(config)
+        >>> WorkflowSuite.generate_tasks(dict_of_all_family_objs, tasks_config)
         """
-        created_families = {}
-        for fam_name, children in families.items():
+        created_parents = {}
+        for parent_name, children in dict_fam_map.items():
             with self:  # check if self is ok, or better way
-                fam = pf.AnchorFamily(fam_name)
-            created_families[fam_name] = fam
+                parent = pf.AnchorFamily(parent_name)
+            created_parents[parent_name] = parent
             for child_name in children:
-                with fam:
-                    child_fam = pf.AnchorFamily(child_name)
-                created_families[child_name] = child_fam
-        return created_families
+                with parent:
+                    child = pf.AnchorFamily(child_name)
+                created_parents[child_name] = child
+        return created_parents
 
     @staticmethod
-    def generate_tasks(families, tasks):
+    def generate_tasks(dict_of_all_family_objs, nested_dict_of_config):
         """Add tasks to the given anchor families.
 
         Creates WorkflowTask instances within each anchor family
@@ -104,25 +66,25 @@ class WorkflowSuite(pf.Suite):
 
         Parameters
         ----------
-        families : dict
-            Dictionary mapping family names to AnchorFamily objects.
-        tasks : dict
-            Dictionary mapping family names to their task/children config.
+        dict_of_all_family_objs : dict
+            Dictionary mapping parent names to AnchorFamily objects.
+        nested_dict_of_config : dict
+            Dictionary mapping parent names to their task/children config.
 
         Examples
         --------
-        >>> families = WorkflowSuite.generate_anchor_families(suite, families_config)
-        >>> WorkflowSuite.generate_tasks(families, tasks_config)
+        >>> dict_of_all_family_objs = WorkflowSuite.generate_anchor_families(suite, families_config)
+        >>> WorkflowSuite.generate_tasks(dict_of_all_family_objs, tasks_config)
         """
-        for fam_name, fam_config in tasks.items():
-            fam = families[fam_name]
+        for parent_name, parent_config in nested_dict_of_config.items():
+            parent = dict_of_all_family_objs[parent_name]
             # Recurse into child families first
-            children_config = fam_config.get('children', {})
+            children_config = parent_config.get('children', {})
             if children_config:
-                WorkflowSuite.generate_tasks(families, children_config)
+                WorkflowSuite.generate_tasks(dict_of_all_family_objs, children_config)
             # Add tasks to this family after children
-            for task_name, task_context in fam_config.get('tasks', {}).items():
-                with fam:
+            for task_name, task_context in parent_config.get('tasks', {}).items():
+                with parent:
                     WorkflowTask(task_name, task_context)
 
     def generate_suite(self, suite_dir: str = './'):
