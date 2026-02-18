@@ -28,6 +28,10 @@ class WorkflowTask(pf.Task):
             Path to the script that the task will execute.
     **kwargs
         Additional keyword arguments to pass to the parent Task class.
+
+    See Also
+    --------
+    WorkflowSuite.generate_tree : Creates family and task hierarchies under a suite.
     """
 
     def __init__(self, name: str, context: dict, **kwargs):

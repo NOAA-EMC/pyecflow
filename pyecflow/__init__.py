@@ -8,14 +8,15 @@ deploying suite definitions.
 Main Components
 ---------------
 WorkflowSuite : class
-    Top-level container for ecFlow workflows. Includes a generate_suite() method
-    to create suite directory structure and deploy files.
+    Top-level container for ecFlow workflows. Use generate_tree() to create
+    the family and task hierarchy from a nested config dictionary, and
+    generate_suite() to deploy the suite directory structure and files.
 WorkflowAnchorFamily : class
-    Anchor family for organizing workflow hierarchy. Use generate_anchor_families()
-    to create family structures under a suite.
+    Anchor family for organizing workflow hierarchy. Created automatically
+    by WorkflowSuite.generate_tree().
 WorkflowTask : class
-    Task definition within a workflow. Use generate_tasks() to populate anchor
-    families with tasks.
+    Task definition within a workflow. Created automatically by
+    WorkflowSuite.generate_tree().
 read_package_file : function
     Utility for reading package data files (static files and templates).
 
@@ -27,11 +28,16 @@ __version__ : str
 Examples
 --------
 >>> from pyecflow import WorkflowSuite
->>> from pyecflow.workflow_task import WorkflowTask
+>>> import pyflow as pf
+>>> config = {
+...     'family_A': {
+...         'tasks': {'task1': {'variables': {...}, 'script': '...'}},
+...         'children': {'family_Aa': {'tasks': {...}, 'children': {}}}
+...     }
+... }
 >>> suite = WorkflowSuite('my_suite', host=pf.LocalHost('localhost'))
->>> dict_of_all_family_objs = suite.add_anchor_family(families_config)  # Creates family hierarchy
->>> WorkflowSuite.generate_tasks(dict_of_all_family_objs, tasks_config)  # Populates families with tasks
->>> suite.generate_suite(suite_dir='/path/to/suite')
+>>> suite.generate_tree(config)  # Creates family hierarchy and tasks
+>>> suite.generate_suite(suite_dir='/path/to/suite')  # Deploys files
 """
 
 from __future__ import absolute_import

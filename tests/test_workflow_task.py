@@ -3,7 +3,7 @@
 This module contains pytest tests for the WorkflowTask class,
 verifying that tasks are initialized correctly with their context
 (variables and script), and that tasks are correctly added to
-anchor families using WorkflowSuite.generate_tasks().
+anchor families using WorkflowSuite.generate_tree().
 """
 
 # imports first
@@ -14,13 +14,7 @@ import pyflow as pf
 from pyecflow import WorkflowSuite
 from pyecflow.workflow_task import WorkflowTask
 
-# Default family structure for testing
-fam_test_dict = {
-    'family_A': ['family_Aa', 'family_Ab'],
-    'family_B': ['family_Ba'],
-}
-
-# Default task structure for testing
+# Unified nested config for testing (used by generate_tree())
 task_test_dict = {
     'family_A': {
         'tasks': {
@@ -114,15 +108,11 @@ class TestWorkflowTask:
         suite_dir = tmp_path / "testSuite"
         print(f"\nSuite directory: {suite_dir}")
 
-        # TODO: should provide a config right here, config is attr
         my_suite = WorkflowSuite(
             'testSuite',
             host=pf.LocalHost('localhost'),
             files=str(suite_dir / 'scripts'))
-        # TODO: fix dict, pull fams from config
-        dict_of_all_family_objs = my_suite.generate_anchor_families(fam_test_dict)
-        # TODO: fix dict, pull tasks from config
-        WorkflowSuite.generate_tasks(dict_of_all_family_objs, task_test_dict)
+        my_suite.generate_tree(task_test_dict)
         my_suite.generate_suite(suite_dir=suite_dir)
 
         # Print the .def file to show actual ecFlow node order
@@ -162,8 +152,7 @@ class TestWorkflowTask:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        dict_of_all_family_objs = my_suite.generate_anchor_families(fam_test_dict)
-        WorkflowSuite.generate_tasks(dict_of_all_family_objs, task_test_dict)
+        my_suite.generate_tree(task_test_dict)
         my_suite.generate_suite(suite_dir=suite_dir)
 
         # Check variables on family_A tasks
@@ -199,8 +188,7 @@ class TestWorkflowTask:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        dict_of_all_family_objs = my_suite.generate_anchor_families(fam_test_dict)
-        WorkflowSuite.generate_tasks(dict_of_all_family_objs, task_test_dict)
+        my_suite.generate_tree(task_test_dict)
         my_suite.generate_suite(suite_dir=suite_dir)
 
         # Print the directory tree

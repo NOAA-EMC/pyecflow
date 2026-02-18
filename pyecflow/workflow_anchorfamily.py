@@ -21,16 +21,14 @@ class WorkflowAnchorFamily(pf.AnchorFamily):
         The name of the anchor family.
     context : dict, optional
         A dictionary containing family configuration with optional keys:
-        - 'children' : list
-            Names of child families to create under this family.
+        - 'variables' : dict
+            Variables to set at the family level.
     **kwargs
         Additional keyword arguments to pass to the parent AnchorFamily class.
 
     See Also
     --------
-    WorkflowSuite.generate_anchor_families : Creates anchor family hierarchies under a suite.
-    WorkflowSuite.generate_tasks : Populates anchor families with tasks.
-    WorkflowSuite.add_anchor_family : Convenience method to add families to a suite.
+    WorkflowSuite.generate_tree : Creates family and task hierarchies under a suite.
     """
 
     def __init__(self, name: str, context: dict = None, **kwargs):
@@ -42,14 +40,13 @@ class WorkflowAnchorFamily(pf.AnchorFamily):
             The name of the anchor family.
         context : dict, optional
             A dictionary containing family configuration with optional keys:
-            - 'children' : list
-                Names of child families to create under this family.
+            - 'variables' : dict
+                Variables to set at the family level.
         **kwargs
             Additional keyword arguments to pass to the parent AnchorFamily class.
         """
-        super().__init__(name, **kwargs)
-        if context is not None:
-            children = context.get('children', [])
-            for child_name in children:
-                with self:
-                    pf.AnchorFamily(child_name)
+        # Extract variables from context if provided
+        if context is not None and context.get('variables'):
+            super().__init__(name, variables=context['variables'], **kwargs)
+        else:
+            super().__init__(name, **kwargs)

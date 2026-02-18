@@ -2,7 +2,7 @@
 
 This module contains pytest tests for the WorkflowAnchorFamily class,
 verifying that anchor families and their directories are created correctly
-using the WorkflowSuite.add_anchor_family() method.
+using the WorkflowSuite.generate_tree() method.
 """
 
 # imports first
@@ -11,20 +11,93 @@ import os
 import pyflow as pf
 
 from pyecflow import WorkflowSuite
+from pyecflow.workflow_anchorfamily import WorkflowAnchorFamily
 
-# Default family structure for testing
-fam_test_dict = {
-    'family_A': ['family_Aa', 'family_Ab'],
-    'family_B': ['family_Ba'],
+# Nested config for testing anchor family hierarchy (families only, no tasks)
+fam_test_config = {
+    'family_A': {
+        'tasks': {},
+        'children': {
+            'family_Aa': {'tasks': {}, 'children': {}},
+            'family_Ab': {'tasks': {}, 'children': {}},
+        },
+    },
+    'family_B': {
+        'tasks': {},
+        'children': {
+            'family_Ba': {'tasks': {}, 'children': {}},
+        },
+    },
+}
+
+# Config with duplicate child names under different parents (edge case)
+duplicate_name_config = {
+    'family_A': {
+        'tasks': {},
+        'children': {
+            'shared_child': {'tasks': {}, 'children': {}},
+        },
+    },
+    'family_B': {
+        'tasks': {},
+        'children': {
+            'shared_child': {'tasks': {}, 'children': {}},
+        },
+    },
 }
 
 
-class TestGenerateAnchorFamily:
+class TestWorkflowAnchorFamily:
     """Test suite for the WorkflowAnchorFamily class.
 
-    This test class validates the functionality of the WorkflowAnchorFamily
-    class, ensuring that it correctly creates the necessary anchor family
-    structure.
+    This test class validates the initialization and configuration
+    of WorkflowAnchorFamily instances.
+    """
+
+    def test_workflow_anchor_family_init_with_context(self):
+        """Test that WorkflowAnchorFamily initializes correctly with a context.
+
+        This test verifies that a WorkflowAnchorFamily can be created with a
+        context containing variables, and that these values are properly
+        set on the family instance.
+        """
+        # AnchorFamily requires a Suite context
+        with WorkflowSuite('testSuite', host=pf.LocalHost('localhost')):
+            context = {'variables': {'ENV': 'production', 'LEVEL': 1}}
+            family = WorkflowAnchorFamily('test_family', context)
+            assert family.name == 'test_family'
+            assert family.lookup_variable('ENV') == 'production'
+            assert family.lookup_variable('LEVEL') == 1
+
+    def test_workflow_anchor_family_init_without_context(self):
+        """Test that WorkflowAnchorFamily initializes correctly without a context.
+
+        This test verifies that a WorkflowAnchorFamily can be created without
+        a context dictionary.
+        """
+        # AnchorFamily requires a Suite context
+        with WorkflowSuite('testSuite', host=pf.LocalHost('localhost')):
+            family = WorkflowAnchorFamily('test_family')
+            assert family.name == 'test_family'
+
+    def test_workflow_anchor_family_init_empty_context(self):
+        """Test that WorkflowAnchorFamily handles empty context correctly.
+
+        This test verifies that a WorkflowAnchorFamily can be created with
+        an empty context dictionary.
+        """
+        # AnchorFamily requires a Suite context
+        with WorkflowSuite('testSuite', host=pf.LocalHost('localhost')):
+            family = WorkflowAnchorFamily('test_family', {})
+            assert family.name == 'test_family'
+
+
+class TestGenerateAnchorFamily:
+    """Test suite for anchor family generation.
+
+    This test class validates the functionality of WorkflowSuite.generate_tree()
+    for creating anchor families, ensuring that it correctly creates the
+    necessary family structure from a nested configuration dictionary.
     """
 
     def test_anchor_family_children_exist(self, tmp_path):
@@ -43,8 +116,7 @@ class TestGenerateAnchorFamily:
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
                                  files=str(suite_dir / 'scripts'))
-        # waf = WorkflowAnchorFamily.generate_anchor_families(my_suite) #taking a suite
-        my_suite.generate_anchor_families(fam_test_dict)  # pass in families to the suite
+        my_suite.generate_tree(fam_test_config)
 
         my_suite.generate_suite(suite_dir=suite_dir)
 
@@ -68,6 +140,51 @@ class TestGenerateAnchorFamily:
         fam_B = my_suite.family_B
         assert fam_B is not None, "family_B was not created"
         assert fam_B.family_Ba is not None, "family_Ba was not created"
+
+    def test_created_families_match_hierarchy(self, tmp_path):
+        """Test that generate_tree() creates all families from the config.
+
+        Uses _extract_family_hierarchy() to get expected families and
+        validates that generate_tree() returns matching family objects.
+        """
+        suite_dir = tmp_path / "testSuite"
+
+        my_suite = WorkflowSuite('testSuite',
+                                 host=pf.LocalHost('localhost'),
+                                 files=str(suite_dir / 'scripts'))
+
+        # Get expected families from config
+        expected_families = set(
+            WorkflowSuite._extract_family_hierarchy(fam_test_config).keys()
+        )
+
+        # Generate tree and get created families
+        created_families = my_suite.generate_tree(fam_test_config)
+
+        # Validate all expected families were created
+        assert set(created_families.keys()) == expected_families, \
+            f"Family mismatch: expected {expected_families}, got {set(created_families.keys())}"
+
+    def test_duplicate_family_names_preserved(self):
+        """Test that families with the same name at different paths are preserved.
+
+        When two different parent families have children with the same name,
+        the path-based keys ensure both are tracked correctly.
+
+        Config structure:
+        - family_A
+          - shared_child  → key: 'family_A/shared_child'
+        - family_B
+          - shared_child  → key: 'family_B/shared_child'
+        """
+        flat_hierarchy = WorkflowSuite._extract_family_hierarchy(duplicate_name_config)
+
+        # Both shared_child families are preserved with full paths
+        assert 'family_A/shared_child' in flat_hierarchy
+        assert 'family_B/shared_child' in flat_hierarchy
+        # We expect 4 families total: family_A, family_B, and both shared_child
+        assert len(flat_hierarchy) == 4, \
+            f"Expected 4 families, got {len(flat_hierarchy)}: {flat_hierarchy}"
 
     def test_deploy_paths(self, tmp_path):
         """Test that tasks in anchor families get correct deploy paths.

@@ -20,72 +20,180 @@ class WorkflowSuite(pf.Suite):
     suite is independent and can be loaded and run separately.
     """
 
-    def generate_anchor_families(self, dict_fam_map):
-        """Generate the anchor family structure under a suite.
+    @staticmethod
+    def _extract_family_hierarchy(nested_config, parent_path=''):
+        """Recursively extract a flat family hierarchy from nested config.
 
-        Creates a hierarchical structure of anchor families directly
-        under the given suite and returns them for later use.
+        Converts a nested configuration dictionary into a flat mapping
+        of family paths to their direct child family names. Uses full
+        paths as keys to handle families with the same name at different
+        locations in the hierarchy.
 
         Parameters
         ----------
-        dict_fam_map : dict
-            Dictionary mapping parent names to lists of child names.
+        nested_config : dict[str, dict]
+            Nested dictionary where:
+            - Keys are family names (str)
+            - Values are dicts with optional keys:
+                - 'children': dict[str, dict] - nested child families
+                - 'tasks': dict[str, dict] - task configurations
+
+            Input structure::
+
+                {
+                    'family_name': {
+                        'children': {<nested_config>},  # optional
+                        'tasks': {...}                   # optional
+                    },
+                    ...
+                }
+
+        parent_path : str, optional
+            The path to the parent family (used for recursion).
+            Default is '' (root level).
 
         Returns
         -------
-        dict
-            Dictionary mapping parent names to the created AnchorFamily objects.
+        dict[str, list[str]]
+            Flat dictionary where:
+            - Keys are full family paths (str), e.g., 'family_A/family_Aa'
+            - Values are lists of direct child family names (list[str])
+
+            Output structure::
+
+                {
+                    'family_A': ['family_Aa', 'family_Ab'],
+                    'family_A/family_Aa': [],
+                    'family_A/family_Ab': [],
+                }
 
         Examples
         --------
-        >>> config = {'family_X': ['family_X1', 'family_X2']}
-        >>> dict_of_all_family_objs = suite.generate_anchor_families(config)
-        >>> WorkflowSuite.generate_tasks(dict_of_all_family_objs, tasks_config)
+        >>> config = {
+        ...     'family_A': {
+        ...         'children': {'family_Aa': {}, 'family_Ab': {}},
+        ...         'tasks': {}
+        ...     }
+        ... }
+        >>> WorkflowSuite._extract_family_hierarchy(config)
+        {'family_A': ['family_Aa', 'family_Ab'], 'family_A/family_Aa': [], 'family_A/family_Ab': []}
         """
-        created_parents = {}
-        for parent_name, children in dict_fam_map.items():
-            with self:  # check if self is ok, or better way
-                parent = pf.AnchorFamily(parent_name)
-            created_parents[parent_name] = parent
-            for child_name in children:
-                with parent:
-                    child = pf.AnchorFamily(child_name)
-                created_parents[child_name] = child
-        return created_parents
+        result = {}
+        for family_name, family_config in nested_config.items():
+            # Build full path for this family
+            family_path = f"{parent_path}/{family_name}" if parent_path else family_name
+            children_config = family_config.get('children', {})
+            result[family_path] = list(children_config.keys())
+            # Recursively process children with updated path
+            if children_config:
+                result.update(WorkflowSuite._extract_family_hierarchy(
+                    children_config, parent_path=family_path
+                ))
+        return result
 
-    @staticmethod
-    def generate_tasks(dict_of_all_family_objs, nested_dict_of_config):
-        """Add tasks to the given anchor families.
+    def generate_tree(self, nested_config):
+        """Generate the complete family and task tree under a suite.
 
-        Creates WorkflowTask instances within each anchor family
-        based on the task dictionary.
-
-        Child families are processed before tasks at each level, ensuring
-        that in the ecFlow definition, nested families appear before
-        sibling tasks.
+        Creates a hierarchical structure of anchor families and their tasks
+        directly under the suite. The nested_config dictionary is the source
+        of truth for the workflow structure. Child families are created before
+        tasks at each level, ensuring that in the ecFlow definition, nested
+        families appear before sibling tasks.
 
         Parameters
         ----------
-        dict_of_all_family_objs : dict
-            Dictionary mapping parent names to AnchorFamily objects.
-        nested_dict_of_config : dict
-            Dictionary mapping parent names to their task/children config.
+        nested_config : dict[str, dict]
+            Nested dictionary where:
+            - Keys are family names (str)
+            - Values are dicts with optional keys:
+                - 'children': dict[str, dict] - nested child families
+                - 'tasks': dict[str, dict] - task configurations
+
+            Input structure::
+
+                {
+                    'family_name': {
+                        'children': {<nested_config>},  # optional
+                        'tasks': {                       # optional
+                            'task_name': {
+                                'variables': {...},
+                                'script': '...'
+                            }
+                        }
+                    },
+                    ...
+                }
+
+        Returns
+        -------
+        dict[str, pf.AnchorFamily]
+            Dictionary where:
+            - Keys are full family paths (str), e.g., 'family_A/family_Aa'
+            - Values are the created pyflow AnchorFamily objects
+
+            Output structure::
+
+                {
+                    'family_A': <AnchorFamily object>,
+                    'family_A/family_Aa': <AnchorFamily object>,
+                    ...
+                }
 
         Examples
         --------
-        >>> dict_of_all_family_objs = WorkflowSuite.generate_anchor_families(suite, families_config)
-        >>> WorkflowSuite.generate_tasks(dict_of_all_family_objs, tasks_config)
+        >>> config = {
+        ...     'family_A': {
+        ...         'tasks': {'task1': {'variables': {...}, 'script': '...'}},
+        ...         'children': {'family_Aa': {'tasks': {...}}}
+        ...     }
+        ... }
+        >>> dict_of_all_family_objs = suite.generate_tree(config)
         """
-        for parent_name, parent_config in nested_dict_of_config.items():
-            parent = dict_of_all_family_objs[parent_name]
-            # Recurse into child families first
-            children_config = parent_config.get('children', {})
-            if children_config:
-                WorkflowSuite.generate_tasks(dict_of_all_family_objs, children_config)
-            # Add tasks to this family after children
-            for task_name, task_context in parent_config.get('tasks', {}).items():
-                with parent:
-                    WorkflowTask(task_name, task_context)
+        created_families = {}
+
+        def _create_tree_recursive(parent_node, config_dict, parent_path=''):
+            """Recursively create families and tasks under a parent node.
+
+            This inner function walks the nested config, creating AnchorFamily
+            objects under each parent using pyflow's context manager pattern.
+            Child families are created before tasks to ensure proper ordering
+            in the ecFlow definition.
+
+            Parameters
+            ----------
+            parent_node : pf.Suite or pf.AnchorFamily
+                The parent node to create children under.
+            config_dict : dict
+                The config dictionary at this level of nesting.
+            parent_path : str
+                The path to the parent family (used for building full paths).
+
+            Side Effects
+            ------------
+            Populates the enclosing `created_families` dict with all
+            created AnchorFamily objects keyed by full path.
+            """
+            for family_name, family_config in config_dict.items():
+                # Build full path for this family
+                family_path = f"{parent_path}/{family_name}" if parent_path else family_name
+
+                # Create the anchor family
+                with parent_node:
+                    family = pf.AnchorFamily(family_name)
+                created_families[family_path] = family
+
+                # Recursively create child families first
+                children_config = family_config.get('children', {})
+                if children_config:
+                    _create_tree_recursive(family, children_config, parent_path=family_path)
+
+                # Add tasks to this family after children
+                for task_name, task_context in family_config.get('tasks', {}).items():
+                    with family:
+                        WorkflowTask(task_name, task_context)
+
+        _create_tree_recursive(self, nested_config)
+        return created_families
 
     def generate_suite(self, suite_dir: str = './'):
         """Generate an ecFlow suite definition file and deploy associated files.
@@ -99,6 +207,11 @@ class WorkflowSuite(pf.Suite):
         suite_dir : str, optional
             The base directory where the suite files will be deployed.
             Default is './'.
+
+        Returns
+        -------
+        None
+            Files are created as side effects in the specified suite_dir.
 
         Notes
         -----
