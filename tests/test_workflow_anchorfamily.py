@@ -7,44 +7,22 @@ using the WorkflowSuite.generate_tree() method.
 
 # imports first
 import os
+from pathlib import Path
 
 import pyflow as pf
+import yaml
 
 from pyecflow import WorkflowSuite
 from pyecflow.workflow_anchorfamily import WorkflowAnchorFamily
 
-# Nested config for testing anchor family hierarchy (families only, no tasks)
-fam_test_config = {
-    'family_A': {
-        'tasks': {},
-        'children': {
-            'family_Aa': {'tasks': {}, 'children': {}},
-            'family_Ab': {'tasks': {}, 'children': {}},
-        },
-    },
-    'family_B': {
-        'tasks': {},
-        'children': {
-            'family_Ba': {'tasks': {}, 'children': {}},
-        },
-    },
-}
+# Load test configs from YAML files
+_pyecflow_dir = Path(__file__).parent.parent / 'pyecflow'
 
-# Config with duplicate child names under different parents (edge case)
-duplicate_name_config = {
-    'family_A': {
-        'tasks': {},
-        'children': {
-            'shared_child': {'tasks': {}, 'children': {}},
-        },
-    },
-    'family_B': {
-        'tasks': {},
-        'children': {
-            'shared_child': {'tasks': {}, 'children': {}},
-        },
-    },
-}
+with open(_pyecflow_dir / 'fam_test_config.yaml') as f:
+    fam_test_config = yaml.safe_load(f)
+
+with open(_pyecflow_dir / 'duplicate_name_config.yaml') as f:
+    duplicate_name_config = yaml.safe_load(f)
 
 
 class TestWorkflowAnchorFamily:

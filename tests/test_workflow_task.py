@@ -8,63 +8,19 @@ anchor families using WorkflowSuite.generate_tree().
 
 # imports first
 import os
+from pathlib import Path
 
 import pyflow as pf
+import yaml
 
 from pyecflow import WorkflowSuite
 from pyecflow.workflow_task import WorkflowTask
 
-# Unified nested config for testing (used by generate_tree())
-task_test_dict = {
-    'family_A': {
-        'tasks': {
-            'task_A1': {
-                'variables': {'NUMBER': 1},
-                'script': 'echo family_A task_A1 NUMBER=$NUMBER',
-            },
-        },
-        'children': {
-            'family_Aa': {
-                'tasks': {
-                    'task_Aa1': {
-                        'variables': {'NUMBER': 11},
-                        'script': 'echo family_Aa task_Aa1 NUMBER=$NUMBER',
-                    },
-                },
-            },
-            'family_Ab': {
-                'tasks': {
-                    'task_Ab1': {
-                        'variables': {'NUMBER': 21},
-                        'script': 'echo family_Ab task_Ab1 NUMBER=$NUMBER',
-                    },
-                    'task_Ab2': {
-                        'variables': {'NUMBER': 22},
-                        'script': 'echo family_Ab task_Ab2 NUMBER=$NUMBER',
-                    },
-                },
-            },
-        },
-    },
-    'family_B': {
-        'tasks': {
-            'task_B1': {
-                'variables': {'NUMBER': 1},
-                'script': 'echo family_B task_B1 NUMBER=$NUMBER',
-            },
-        },
-        'children': {
-            'family_Ba': {
-                'tasks': {
-                    'task_Ba1': {
-                        'variables': {'NUMBER': 11},
-                        'script': 'echo family_Ba task_Ba1 NUMBER=$NUMBER',
-                    },
-                },
-            },
-        },
-    },
-}
+# Load test config from YAML file
+_pyecflow_dir = Path(__file__).parent.parent / 'pyecflow'
+
+with open(_pyecflow_dir / 'task_test_config.yaml') as f:
+    task_test_dict = yaml.safe_load(f)
 
 
 class TestWorkflowTask:
