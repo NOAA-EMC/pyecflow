@@ -6,8 +6,7 @@ An application to create `ecFlow` suites
 `pyecflow` provides a Python interface for creating and managing ecFlow workflows with the following main components:
 
 * **WorkflowSuite**: Top-level container for ecFlow workflows with methods to generate suite directory structure and deploy files
-* **WorkflowFamily**: Container for organizing and grouping related tasks in a workflow hierarchy
-* **WorkflowAnchorFamily**: Special family type for synchronizing tasks across different parts of the workflow
+* **WorkflowAnchorFamily**: Anchor family for organizing workflow hierarchy and script file organization
 * **WorkflowTask**: Individual task representing a single job or script to be executed
 
 ## Installation
@@ -46,28 +45,42 @@ pytest tests/
 ### Basic Example
 
 ```python
-from pyecflow import WorkflowSuite, WorkflowFamily, WorkflowTask
+import pyflow as pf
+from pyecflow import WorkflowSuite
+
+# Define workflow structure as a nested config dictionary
+config = {
+    'family_A': {
+        'tasks': {
+            'task_A1': {
+                'variables': {'VAR1': 'value1'},
+                'script': 'echo task_A1 VAR1=$VAR1',
+            },
+        },
+        'children': {
+            'family_Aa': {
+                'tasks': {
+                    'task_Aa1': {
+                        'variables': {'VAR1': 'value2'},
+                        'script': 'echo task_Aa1 VAR1=$VAR1',
+                    },
+                },
+            },
+        },
+    },
+}
 
 # Create a suite
-suite = WorkflowSuite('my_suite')
+suite = WorkflowSuite(
+    'my_suite',
+    host=pf.LocalHost('localhost'),
+    files='/path/to/suite/scripts'
+)
 
-# Create a family
-family = WorkflowFamily('my_family')
+# Generate family hierarchy and tasks from config
+suite.generate_tree(config)
 
-# Create a task
-task_context = {
-    'variables': {'VAR1': 'value1'},
-    'script': '/path/to/script.sh'
-}
-task = WorkflowTask('my_task', context=task_context)
-
-# Add task to family
-family.add(task)
-
-# Add family to suite
-suite.add(family)
-
-# Generate suite directory structure
+# Generate suite directory structure and deploy files
 suite.generate_suite(suite_dir='/path/to/suite')
 ```
 

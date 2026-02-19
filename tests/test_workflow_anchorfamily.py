@@ -25,6 +25,35 @@ with open(_pyecflow_dir / 'duplicate_name_config.yaml') as f:
     duplicate_name_config = yaml.safe_load(f)
 
 
+class TestYamlConfigLoading:
+    """Test suite for YAML config file loading.
+
+    Validates that the YAML config files exist and are loaded
+    with the expected structure.
+    """
+
+    def test_fam_test_config_structure(self):
+        """Test that fam_test_config loads with expected structure."""
+        assert 'family_A' in fam_test_config
+        assert 'family_B' in fam_test_config
+        assert 'children' in fam_test_config['family_A']
+        assert 'family_Aa' in fam_test_config['family_A']['children']
+        assert 'family_Ab' in fam_test_config['family_A']['children']
+        assert 'family_Ba' in fam_test_config['family_B']['children']
+
+    def test_duplicate_name_config_structure(self):
+        """Test that duplicate_name_config loads with expected structure."""
+        assert 'family_A' in duplicate_name_config
+        assert 'family_B' in duplicate_name_config
+        assert 'shared_child' in duplicate_name_config['family_A']['children']
+        assert 'shared_child' in duplicate_name_config['family_B']['children']
+
+    def test_yaml_files_exist(self):
+        """Test that the YAML config files exist."""
+        assert (_pyecflow_dir / 'fam_test_config.yaml').exists()
+        assert (_pyecflow_dir / 'duplicate_name_config.yaml').exists()
+
+
 class TestWorkflowAnchorFamily:
     """Test suite for the WorkflowAnchorFamily class.
 

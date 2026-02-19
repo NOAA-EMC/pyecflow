@@ -23,6 +23,37 @@ with open(_pyecflow_dir / 'task_test_config.yaml') as f:
     task_test_dict = yaml.safe_load(f)
 
 
+class TestYamlConfigLoading:
+    """Test suite for YAML config file loading.
+
+    Validates that the YAML config file exists and is loaded
+    with the expected structure.
+    """
+
+    def test_task_test_dict_structure(self):
+        """Test that task_test_dict loads with expected structure."""
+        assert 'family_A' in task_test_dict
+        assert 'family_B' in task_test_dict
+        # Check tasks exist
+        assert 'task_A1' in task_test_dict['family_A']['tasks']
+        assert 'task_B1' in task_test_dict['family_B']['tasks']
+        # Check nested structure
+        assert 'family_Aa' in task_test_dict['family_A']['children']
+        assert 'task_Aa1' in task_test_dict['family_A']['children']['family_Aa']['tasks']
+
+    def test_task_config_has_required_keys(self):
+        """Test that task configs have required 'variables' and 'script' keys."""
+        task_A1 = task_test_dict['family_A']['tasks']['task_A1']
+        assert 'variables' in task_A1
+        assert 'script' in task_A1
+        assert 'NUMBER' in task_A1['variables']
+        assert task_A1['variables']['NUMBER'] == 1
+
+    def test_yaml_file_exists(self):
+        """Test that the YAML config file exists."""
+        assert (_pyecflow_dir / 'task_test_config.yaml').exists()
+
+
 class TestWorkflowTask:
     """Test suite for the WorkflowTask class.
 
