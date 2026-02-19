@@ -6,6 +6,7 @@ suites in ecFlow workflows.
 
 # imports
 import os
+import warnings
 
 import pyflow as pf
 
@@ -80,10 +81,18 @@ class WorkflowSuite(pf.Suite):
         """
         result = {}
         for family_name, family_config in nested_config.items():
+            # Skip empty family names
+            if not family_name:
+                warnings.warn("family name is empty, skipping")
+                continue
             # Build full path for this family
             family_path = f"{parent_path}/{family_name}" if parent_path else family_name
-            children_config = family_config.get('children', {})
-            result[family_path] = list(children_config.keys())
+            children_config = family_config.get('children', {}) if family_config else {}
+            # Filter out empty child names
+            valid_children = [name for name in children_config.keys() if name]
+            if len(valid_children) < len(children_config):
+                warnings.warn("family name is empty, skipping")
+            result[family_path] = valid_children
             # Recursively process children with updated path
             if children_config:
                 result.update(WorkflowSuite._extract_family_hierarchy(
@@ -174,6 +183,13 @@ class WorkflowSuite(pf.Suite):
             created AnchorFamily objects keyed by full path.
             """
             for family_name, family_config in config_dict.items():
+                # Skip empty family names
+                if not family_name:
+                    warnings.warn("family name is empty, skipping")
+                    continue
+                # Handle None family_config
+                if family_config is None:
+                    family_config = {}
                 # Build full path for this family
                 family_path = f"{parent_path}/{family_name}" if parent_path else family_name
 
@@ -189,6 +205,28 @@ class WorkflowSuite(pf.Suite):
 
                 # Add tasks to this family after children
                 for task_name, task_context in family_config.get('tasks', {}).items():
+                    # Skip empty task names
+                    if not task_name:
+                        warnings.warn("task name is empty, skipping")
+                        continue
+                    # Handle None task_context
+                    if task_context is None:
+                        task_context = {}
+                    # Validate and filter variables
+                    variables = task_context.get('variables', {})
+                    if variables:
+                        filtered_vars = {}
+                        for var_name, var_value in variables.items():
+                            if not var_name:
+                                warnings.warn("variable name is empty, skipping")
+                                continue
+                            filtered_vars[var_name] = var_value
+                        task_context = {**task_context, 'variables': filtered_vars}
+                    # Validate script
+                    script = task_context.get('script', '')
+                    if not script:
+                        warnings.warn("script is empty, skipping task")
+                        continue
                     with family:
                         WorkflowTask(task_name, task_context)
 
