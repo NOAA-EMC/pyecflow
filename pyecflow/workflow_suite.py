@@ -10,6 +10,7 @@ import warnings
 
 import pyflow as pf
 
+from .workflow_header import ensure_headers
 from .workflow_task import WorkflowTask
 
 
@@ -297,14 +298,7 @@ class WorkflowSuite(pf.Suite):
         suite_def.save_as_defs(os.path.join(def_dir, f'{self.name}.def'))
 
         # Create include directory and copy header files
-        if not os.path.exists(include_dir):
-            os.makedirs(include_dir, exist_ok=True)
-
-        # TODO: This needs to be implemented by methods in header.py from pyflow
-        # for header_file in self.headers:
-        #    header_file_path = header_file.filepath
-        #    if os.path.exists(header_file_path):
-        #        shutil.copy(header_file_path, include_dir)
+        ensure_headers(include_dir)
 
         # Create scripts directory and deploy scripts
         if not os.path.exists(scripts_dir):
