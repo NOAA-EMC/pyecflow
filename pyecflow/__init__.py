@@ -28,14 +28,13 @@ __version__ : str
 Examples
 --------
 >>> from pyecflow import WorkflowSuite
->>> import pyflow as pf
 >>> config = {
 ...     'family_A': {
 ...         'tasks': {'task1': {'variables': {...}, 'script': '...'}},
 ...         'children': {'family_Aa': {'tasks': {...}, 'children': {}}}
 ...     }
 ... }
->>> suite = WorkflowSuite('my_suite', host=pf.LocalHost('localhost'))
+>>> suite = WorkflowSuite('my_suite')
 >>> suite.generate_tree(config)  # Creates family hierarchy and tasks
 >>> suite.generate_suite(suite_dir='/path/to/suite')  # Deploys files
 """

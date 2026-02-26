@@ -16,12 +16,12 @@ from pyecflow import WorkflowSuite
 from pyecflow.workflow_anchorfamily import WorkflowAnchorFamily
 
 # Load test configs from YAML files
-_pyecflow_dir = Path(__file__).parent.parent / 'pyecflow'
+_test_data_dir = Path(__file__).parent / 'data'
 
-with open(_pyecflow_dir / 'fam_test_config.yaml') as f:
+with open(_test_data_dir / 'fam_test_config.yaml') as f:
     fam_test_config = yaml.safe_load(f)
 
-with open(_pyecflow_dir / 'duplicate_name_config.yaml') as f:
+with open(_test_data_dir / 'duplicate_name_config.yaml') as f:
     duplicate_name_config = yaml.safe_load(f)
 
 
@@ -50,8 +50,8 @@ class TestYamlConfigLoading:
 
     def test_yaml_files_exist(self):
         """Test that the YAML config files exist."""
-        assert (_pyecflow_dir / 'fam_test_config.yaml').exists()
-        assert (_pyecflow_dir / 'duplicate_name_config.yaml').exists()
+        assert (_test_data_dir / 'fam_test_config.yaml').exists()
+        assert (_test_data_dir / 'duplicate_name_config.yaml').exists()
 
 
 class TestWorkflowAnchorFamily:
