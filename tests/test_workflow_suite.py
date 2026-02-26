@@ -30,6 +30,9 @@ class TestGenerateSuite:
         - include/ : For include/header files
         - scripts/ : For ecFlow script files
 
+        The method also recursively creates directories for any families and nested
+        families that have been added to the suite.
+
         The test also verifies that the created paths are actual directories
         and not files.
 
@@ -42,6 +45,7 @@ class TestGenerateSuite:
 
 # Create a minimal suite for testing
         suite_dir = tmp_path / "testSuite"
+        print(f"\nSuite directory: {suite_dir}")
 
         my_suite = WorkflowSuite('testSuite',
                                  host=pf.LocalHost('localhost'),
@@ -49,6 +53,16 @@ class TestGenerateSuite:
 
         # Generate the suite
         my_suite.generate_suite(suite_dir=suite_dir)
+
+        # Print the directory tree
+        print("\nDirectory tree:")
+        for root, dirs, files in os.walk(suite_dir):
+            level = len(root.replace(str(suite_dir), '').split(os.sep)) - 1
+            indent = '  ' * level
+            print(f"{indent}{os.path.basename(root)}/")
+            subindent = '  ' * (level + 1)
+            for f in files:
+                print(f"{subindent}{f}")
 
         # Assert that the directories were created
         assert os.path.exists(suite_dir / 'def'), "def/ directory was not created"

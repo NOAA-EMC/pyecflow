@@ -1,6 +1,14 @@
 # pyecflow
 An application to create `ecFlow` suites
 
+## Overview
+
+`pyecflow` provides a Python interface for creating and managing ecFlow workflows with the following main components:
+
+* **WorkflowSuite**: Top-level container for ecFlow workflows with methods to generate suite directory structure and deploy files
+* **WorkflowAnchorFamily**: Anchor family for organizing workflow hierarchy and script file organization
+* **WorkflowTask**: Individual task representing a single job or script to be executed
+
 ## Installation
 
 ### Dependencies
@@ -31,3 +39,49 @@ You can run the tests using the following command:
 ```bash
 pytest tests/
 ```
+
+## Usage
+
+### Basic Example
+
+```python
+import pyflow as pf
+from pyecflow import WorkflowSuite
+
+# Define workflow structure as a nested config dictionary
+config = {
+    'family_A': {
+        'tasks': {
+            'task_A1': {
+                'variables': {'VAR1': 'value1'},
+                'script': 'echo task_A1 VAR1=$VAR1',
+            },
+        },
+        'children': {
+            'family_Aa': {
+                'tasks': {
+                    'task_Aa1': {
+                        'variables': {'VAR1': 'value2'},
+                        'script': 'echo task_Aa1 VAR1=$VAR1',
+                    },
+                },
+            },
+        },
+    },
+}
+
+# Create a suite
+suite = WorkflowSuite(
+    'my_suite',
+    host=pf.LocalHost('localhost'),
+    files='/path/to/suite/scripts'
+)
+
+# Generate family hierarchy and tasks from config
+suite.generate_tree(config)
+
+# Generate suite directory structure and deploy files
+suite.generate_suite(suite_dir='/path/to/suite')
+```
+
+For more examples, see the notebooks in the `notebooks/` directory.

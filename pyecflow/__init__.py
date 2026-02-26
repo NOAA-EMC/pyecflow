@@ -1,14 +1,22 @@
 """pyecflow - A Python package for creating ecFlow workflows.
 
 This package provides high-level classes and utilities for building ecFlow
-workflows using pyflow. It includes components for creating suites,
-as well as utilities for reading package data and deploying suite definitions.
+workflows using pyflow. It includes components for creating suites, anchor
+families, and tasks, as well as utilities for reading package data and
+deploying suite definitions.
 
 Main Components
 ---------------
 WorkflowSuite : class
-    Top-level container for ecFlow workflows. Includes a generate_suite() method
-    to create suite directory structure and deploy files.
+    Top-level container for ecFlow workflows. Use generate_tree() to create
+    the family and task hierarchy from a nested config dictionary, and
+    generate_suite() to deploy the suite directory structure and files.
+WorkflowAnchorFamily : class
+    Anchor family for organizing workflow hierarchy. Created automatically
+    by WorkflowSuite.generate_tree().
+WorkflowTask : class
+    Task definition within a workflow. Created automatically by
+    WorkflowSuite.generate_tree().
 read_package_file : function
     Utility for reading package data files (static files and templates).
 
@@ -20,15 +28,24 @@ __version__ : str
 Examples
 --------
 >>> from pyecflow import WorkflowSuite
+>>> config = {
+...     'family_A': {
+...         'tasks': {'task1': {'variables': {...}, 'script': '...'}},
+...         'children': {'family_Aa': {'tasks': {...}, 'children': {}}}
+...     }
+... }
 >>> suite = WorkflowSuite('my_suite')
->>> suite.generate_suite(suite_dir='/path/to/suite')
+>>> suite.generate_tree(config)  # Creates family hierarchy and tasks
+>>> suite.generate_suite(suite_dir='/path/to/suite')  # Deploys files
 """
 
 from __future__ import absolute_import
 
 import importlib.resources
 
+from .workflow_anchorfamily import WorkflowAnchorFamily
 from .workflow_suite import WorkflowSuite
+from .workflow_task import WorkflowTask
 
 
 def read_package_file(filetype: str, filename: str) -> str:
@@ -66,4 +83,4 @@ except ImportError:  # pragma: no cover
     # Local copy or not installed with setuptools
     __version__ = ""
 
-__all__ = ["read_package_file", "__version__", "WorkflowSuite"]
+__all__ = ["read_package_file", "__version__", "WorkflowSuite", "WorkflowAnchorFamily", "WorkflowTask"]
