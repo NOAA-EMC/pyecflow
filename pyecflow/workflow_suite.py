@@ -297,11 +297,18 @@ class WorkflowSuite(pf.Suite):
         suite_def = self.ecflow_definition()
         suite_def.save_as_defs(os.path.join(def_dir, f'{self.name}.def'))
 
-        # Create include directory and copy header files
-        ensure_headers(include_dir)
+        # Create include directory - pyflow will deploy header files here
+        if not os.path.exists(include_dir):
+            os.makedirs(include_dir, exist_ok=True)
+        # Set ECF_INCLUDE so pyflow knows where to deploy header files
+        self.ECF_INCLUDE = include_dir
 
         # Create scripts directory and deploy scripts
         if not os.path.exists(scripts_dir):
             os.makedirs(scripts_dir, exist_ok=True)
 
+        # Deploy scripts and class-attribute headers (workflowtask_head.h, etc.)
         self.deploy_suite()
+
+        # Copy any missing static headers (head.h, envir-p1.h, tail.h) from static/
+        ensure_headers(include_dir)

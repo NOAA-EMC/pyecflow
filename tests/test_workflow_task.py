@@ -67,13 +67,32 @@ class TestWorkflowTask:
 
         This test verifies that a WorkflowTask can be created with a context
         containing variables and a script, and that these values are properly
-        set on the task instance.
+        set on the task instance. With pyflow's tightly coupled header model,
+        head/tail are class attributes that pyflow uses to:
+        1. Generate %include <workflowtask_head.h> directives in .ecf files
+        2. Deploy the header files to include/
         """
         tAa1c = {'variables': {'NUMBER': 101},
                  'script': "echo family_Aa NUMBER=$NUMBER"}
         tAa1 = WorkflowTask('Aa1', tAa1c)
         print(tAa1.script)
-        assert str(tAa1.script) == "echo family_Aa NUMBER=$NUMBER"
+
+        # Verify the script contains the user script
+        script_str = str(tAa1.script)
+        assert "echo family_Aa NUMBER=$NUMBER" in script_str
+
+        # Verify head/tail class attributes exist and contain expected content
+        assert hasattr(WorkflowTask, 'head'), "WorkflowTask should have head class attribute"
+        assert hasattr(WorkflowTask, 'tail'), "WorkflowTask should have tail class attribute"
+
+        # Verify head contains ecFlow initialization
+        assert "ecflow_client --init" in WorkflowTask.head
+        assert "ECF_NAME" in WorkflowTask.head
+
+        # Verify tail contains ecFlow completion
+        assert "ecflow_client --complete" in WorkflowTask.tail
+
+        # Verify variable is set correctly
         assert tAa1.lookup_variable('NUMBER') == 101
 
     def test_task_children_exist(self, tmp_path):
