@@ -1,0 +1,13 @@
+family_A:
+  tasks: {}
+  children:
+    shared_child:
+      tasks: {}
+      children: {}
+
+family_B:
+  tasks: {}
+  children:
+    shared_child:
+      tasks: {}
+      children: {}

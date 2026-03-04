@@ -17,9 +17,9 @@ from pyecflow import WorkflowSuite
 from pyecflow.workflow_task import WorkflowTask
 
 # Load test config from YAML file
-_pyecflow_dir = Path(__file__).parent.parent / 'pyecflow'
+_test_data_dir = Path(__file__).parent / 'data'
 
-with open(_pyecflow_dir / 'task_test_config.yaml') as f:
+with open(_test_data_dir / 'task_test_config.yaml') as f:
     task_test_dict = yaml.safe_load(f)
 
 
@@ -51,7 +51,7 @@ class TestYamlConfigLoading:
 
     def test_yaml_file_exists(self):
         """Test that the YAML config file exists."""
-        assert (_pyecflow_dir / 'task_test_config.yaml').exists()
+        assert (_test_data_dir / 'task_test_config.yaml').exists()
 
 
 class TestWorkflowTask:

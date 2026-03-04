@@ -31,7 +31,7 @@ class WorkflowAnchorFamily(pf.AnchorFamily):
     WorkflowSuite.generate_tree : Creates family and task hierarchies under a suite.
     """
 
-    def __init__(self, name: str, context: dict = None, **kwargs):
+    def __init__(self, name: str, context: dict = {}, **kwargs):
         """Initialize a WorkflowAnchorFamily.
 
         Parameters
@@ -45,8 +45,13 @@ class WorkflowAnchorFamily(pf.AnchorFamily):
         **kwargs
             Additional keyword arguments to pass to the parent AnchorFamily class.
         """
+        # Validate context type
+        if not isinstance(context, dict):
+            context_type = type(context)
+            raise TypeError(f"Input variable 'context' is type {context_type}, expected a dictionary")
+
         # Extract variables from context if provided
-        if context is not None and context.get('variables'):
+        if context.get('variables'):
             super().__init__(name, variables=context['variables'], **kwargs)
         else:
             super().__init__(name, **kwargs)
