@@ -84,4 +84,29 @@ suite.generate_tree(config)
 suite.generate_suite(suite_dir='/path/to/suite')
 ```
 
+### Custom Header Files
+
+By default, `pyecflow` uses standard header files (`head.h`, `tail.h`, `envir-p1.h`) from the package's `static/` directory. You can specify custom header files in your configuration:
+
+```python
+config = {
+    # Optional: specify custom header file paths
+    'headers': {
+        'head': '/path/to/custom/head.h',    # or omit for default
+        'tail': '/path/to/custom/tail.h',    # or omit for default
+        'envir': '/path/to/custom/envir-p1.h'  # or omit for default
+    },
+    'family_A': {
+        'tasks': {
+            'task_A1': {
+                'variables': {'VAR1': 'value1'},
+                'script': 'echo task_A1',
+            },
+        },
+    },
+}
+```
+
+If you omit the `headers` section entirely, or leave any path empty/null, the default headers from the package will be used.
+
 For more examples, see the notebooks in the `notebooks/` directory.

@@ -11,6 +11,10 @@ import pytest
 from pyecflow.workflow_header import (
     HEADER_FILES,
     STATIC_DIR,
+    _Header,
+    _FileHeader,
+    _StaticHeader,
+    _HeaderSet,
     ensure_headers,
     headers_exist,
     list_missing_headers,
@@ -235,3 +239,274 @@ class TestListMissingHeaders:
         missing = list_missing_headers(str(include_dir))
 
         assert set(missing) == set(HEADER_FILES)
+
+
+class Test_StaticHeader:
+    """Test the _StaticHeader class."""
+
+    def test_get_content_reads_head_file(self):
+        """Test that _StaticHeader can read head.h from static/."""
+        header = _StaticHeader('head.h')
+        content = header.get_content()
+        assert content.startswith('#')
+        assert 'ECF_NAME' in content
+
+    def test_get_content_reads_tail_file(self):
+        """Test that _StaticHeader can read tail.h from static/."""
+        header = _StaticHeader('tail.h')
+        content = header.get_content()
+        assert 'ecflow_client' in content
+
+    def test_name_property(self):
+        """Test the name property returns the header filename."""
+        header = _StaticHeader('head.h')
+        assert header.name == 'head.h'
+
+    def test_install_creates_file(self, tmp_path):
+        """Test that install creates the header file in include directory."""
+        include_dir = tmp_path / 'include'
+        include_dir.mkdir()
+
+        header = _StaticHeader('head.h')
+        result = header.install(str(include_dir))
+
+        assert (include_dir / 'head.h').exists()
+        assert result == str(include_dir / 'head.h')
+
+    def test_install_creates_directory_if_needed(self, tmp_path):
+        """Test that install creates include directory if it doesn't exist."""
+        include_dir = tmp_path / 'include'
+        assert not include_dir.exists()
+
+        header = _StaticHeader('head.h')
+        header.install(str(include_dir))
+
+        assert include_dir.exists()
+        assert (include_dir / 'head.h').exists()
+
+    def test_raises_for_nonexistent_static_file(self):
+        """Test that _StaticHeader raises FileNotFoundError for missing file."""
+        header = _StaticHeader('nonexistent.h')
+        with pytest.raises(FileNotFoundError) as excinfo:
+            header.get_content()
+        assert 'not found in static' in str(excinfo.value)
+
+
+class Test_FileHeader:
+    """Test the _FileHeader class."""
+
+    def test_get_content_reads_custom_file(self, tmp_path):
+        """Test that _FileHeader reads content from custom file path."""
+        custom_file = tmp_path / 'custom_head.h'
+        custom_content = '# Custom header content\necho "Custom"'
+        custom_file.write_text(custom_content)
+
+        header = _FileHeader('head.h', str(custom_file))
+        content = header.get_content()
+
+        assert content == custom_content
+
+    def test_path_property(self, tmp_path):
+        """Test the path property returns the source file path."""
+        custom_file = tmp_path / 'custom.h'
+        custom_file.write_text('# content')
+
+        header = _FileHeader('head.h', str(custom_file))
+        assert header.path == str(custom_file)
+
+    def test_install_copies_custom_file(self, tmp_path):
+        """Test that install copies custom file to include directory."""
+        custom_file = tmp_path / 'custom_head.h'
+        custom_content = '# Custom header'
+        custom_file.write_text(custom_content)
+
+        include_dir = tmp_path / 'include'
+        include_dir.mkdir()
+
+        header = _FileHeader('head.h', str(custom_file))
+        header.install(str(include_dir))
+
+        installed_content = (include_dir / 'head.h').read_text()
+        assert installed_content == custom_content
+
+    def test_raises_for_nonexistent_file(self, tmp_path):
+        """Test that _FileHeader raises FileNotFoundError for missing file."""
+        header = _FileHeader('head.h', '/nonexistent/path/head.h')
+        with pytest.raises(FileNotFoundError) as excinfo:
+            header.get_content()
+        assert 'not found' in str(excinfo.value)
+
+
+class Test_HeaderSet:
+    """Test the _HeaderSet class."""
+
+    def test_default_creates_static_headers(self):
+        """Test that _HeaderSet with no args creates _StaticHeaders."""
+        headers = _HeaderSet()
+
+        assert isinstance(headers.head, _StaticHeader)
+        assert isinstance(headers.tail, _StaticHeader)
+        assert isinstance(headers.envir, _StaticHeader)
+
+    def test_custom_paths_create_file_headers(self, tmp_path):
+        """Test that _HeaderSet with custom paths creates _FileHeaders."""
+        custom_head = tmp_path / 'head.h'
+        custom_tail = tmp_path / 'tail.h'
+        custom_envir = tmp_path / 'envir-p1.h'
+        for f in [custom_head, custom_tail, custom_envir]:
+            f.write_text('# content')
+
+        headers = _HeaderSet(
+            head_path=str(custom_head),
+            tail_path=str(custom_tail),
+            envir_path=str(custom_envir)
+        )
+
+        assert isinstance(headers.head, _FileHeader)
+        assert isinstance(headers.tail, _FileHeader)
+        assert isinstance(headers.envir, _FileHeader)
+
+    def test_mixed_paths_creates_mixed_headers(self, tmp_path):
+        """Test that _HeaderSet with some custom paths creates mixed headers."""
+        custom_head = tmp_path / 'head.h'
+        custom_head.write_text('# custom head')
+
+        headers = _HeaderSet(head_path=str(custom_head))
+
+        assert isinstance(headers.head, _FileHeader)
+        assert isinstance(headers.tail, _StaticHeader)
+        assert isinstance(headers.envir, _StaticHeader)
+
+    def test_install_all_headers(self, tmp_path):
+        """Test that install() installs all three header files."""
+        include_dir = tmp_path / 'include'
+        include_dir.mkdir()
+
+        headers = _HeaderSet()
+        installed = headers.install(str(include_dir))
+
+        assert len(installed) == 3
+        assert (include_dir / 'head.h').exists()
+        assert (include_dir / 'tail.h').exists()
+        assert (include_dir / 'envir-p1.h').exists()
+
+
+class TestEnsureHeadersWithCustomPaths:
+    """Test ensure_headers function with custom path arguments."""
+
+    def test_custom_head_path(self, tmp_path):
+        """Test that custom head_path copies custom file."""
+        custom_head = tmp_path / 'custom_head.h'
+        custom_content = '# Custom head content'
+        custom_head.write_text(custom_content)
+
+        include_dir = tmp_path / 'include'
+        include_dir.mkdir()
+
+        copied = ensure_headers(str(include_dir), head_path=str(custom_head))
+
+        assert 'head.h' in copied
+        assert (include_dir / 'head.h').read_text() == custom_content
+
+    def test_custom_tail_path(self, tmp_path):
+        """Test that custom tail_path copies custom file."""
+        custom_tail = tmp_path / 'custom_tail.h'
+        custom_content = '# Custom tail content'
+        custom_tail.write_text(custom_content)
+
+        include_dir = tmp_path / 'include'
+        include_dir.mkdir()
+
+        copied = ensure_headers(str(include_dir), tail_path=str(custom_tail))
+
+        assert 'tail.h' in copied
+        assert (include_dir / 'tail.h').read_text() == custom_content
+
+    def test_custom_envir_path(self, tmp_path):
+        """Test that custom envir_path copies custom file."""
+        custom_envir = tmp_path / 'custom_envir.h'
+        custom_content = '# Custom envir content'
+        custom_envir.write_text(custom_content)
+
+        include_dir = tmp_path / 'include'
+        include_dir.mkdir()
+
+        copied = ensure_headers(str(include_dir), envir_path=str(custom_envir))
+
+        assert 'envir-p1.h' in copied
+        assert (include_dir / 'envir-p1.h').read_text() == custom_content
+
+    def test_all_custom_paths(self, tmp_path):
+        """Test that all custom paths are copied."""
+        custom_head = tmp_path / 'custom_head.h'
+        custom_tail = tmp_path / 'custom_tail.h'
+        custom_envir = tmp_path / 'custom_envir.h'
+
+        custom_head.write_text('# head')
+        custom_tail.write_text('# tail')
+        custom_envir.write_text('# envir')
+
+        include_dir = tmp_path / 'include'
+        include_dir.mkdir()
+
+        copied = ensure_headers(
+            str(include_dir),
+            head_path=str(custom_head),
+            tail_path=str(custom_tail),
+            envir_path=str(custom_envir)
+        )
+
+        assert set(copied) == {'head.h', 'tail.h', 'envir-p1.h'}
+        assert (include_dir / 'head.h').read_text() == '# head'
+        assert (include_dir / 'tail.h').read_text() == '# tail'
+        assert (include_dir / 'envir-p1.h').read_text() == '# envir'
+
+    def test_custom_path_overwrites_existing_file(self, tmp_path):
+        """Test that custom path overwrites existing file in include dir."""
+        include_dir = tmp_path / 'include'
+        include_dir.mkdir()
+
+        # Create existing head.h
+        existing_head = include_dir / 'head.h'
+        existing_head.write_text('# existing content')
+
+        # Create custom head.h
+        custom_head = tmp_path / 'custom_head.h'
+        custom_content = '# new custom content'
+        custom_head.write_text(custom_content)
+
+        # Ensure headers with custom path - should overwrite
+        copied = ensure_headers(str(include_dir), head_path=str(custom_head))
+
+        assert 'head.h' in copied
+        assert existing_head.read_text() == custom_content
+
+    def test_mixed_custom_and_default(self, tmp_path):
+        """Test mixing custom paths with defaults."""
+        custom_head = tmp_path / 'custom_head.h'
+        custom_head.write_text('# custom head')
+
+        include_dir = tmp_path / 'include'
+        include_dir.mkdir()
+
+        copied = ensure_headers(str(include_dir), head_path=str(custom_head))
+
+        # Custom head should be copied
+        assert 'head.h' in copied
+        assert (include_dir / 'head.h').read_text() == '# custom head'
+
+        # Default tail and envir should also be copied (from static/)
+        assert 'tail.h' in copied
+        assert 'envir-p1.h' in copied
+        assert 'ecflow_client' in (include_dir / 'tail.h').read_text()
+
+    def test_custom_path_file_not_found(self, tmp_path):
+        """Test that FileNotFoundError is raised for nonexistent custom path."""
+        include_dir = tmp_path / 'include'
+        include_dir.mkdir()
+
+        with pytest.raises(FileNotFoundError):
+            ensure_headers(
+                str(include_dir),
+                head_path='/nonexistent/path/head.h'
+            )

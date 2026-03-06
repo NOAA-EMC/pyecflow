@@ -20,7 +20,23 @@ class WorkflowSuite(pf.Suite):
     This class represents a suite in an ecFlow workflow. A suite is the top-level
     container in the ecFlow hierarchy and can contain families and tasks. Each
     suite is independent and can be loaded and run separately.
+
+    Attributes
+    ----------
+    _header_paths : dict
+        Dictionary storing custom header file paths extracted from config.
+        Keys are 'head', 'tail', 'envir'. Values are file paths or None.
     """
+
+    def __init__(self, *args, **kwargs):
+        """Initialize WorkflowSuite with header path storage."""
+        super().__init__(*args, **kwargs)
+        # Initialize header paths - will be populated by generate_tree()
+        self._header_paths = {
+            'head': None,
+            'tail': None,
+            'envir': None
+        }
 
     @staticmethod
     def _extract_family_hierarchy(nested_config, parent_path=''):
@@ -114,7 +130,7 @@ class WorkflowSuite(pf.Suite):
         ----------
         nested_config : dict[str, dict]
             Nested dictionary where:
-            - Keys are family names (str)
+            - Keys are family names (str) or 'headers' for header config
             - Values are dicts with optional keys:
                 - 'children': dict[str, dict] - nested child families
                 - 'tasks': dict[str, dict] - task configurations
@@ -122,6 +138,11 @@ class WorkflowSuite(pf.Suite):
             Input structure::
 
                 {
+                    'headers': {                         # optional
+                        'head': '/path/to/head.h',       # optional
+                        'tail': '/path/to/tail.h',       # optional
+                        'envir': '/path/to/envir-p1.h'   # optional
+                    },
                     'family_name': {
                         'children': {<nested_config>},  # optional
                         'tasks': {                       # optional
@@ -152,6 +173,7 @@ class WorkflowSuite(pf.Suite):
         Examples
         --------
         >>> config = {
+        ...     'headers': {'head': '/custom/head.h'},  # optional
         ...     'family_A': {
         ...         'tasks': {'task1': {'variables': {...}, 'script': '...'}},
         ...         'children': {'family_Aa': {'tasks': {...}}}
@@ -159,6 +181,13 @@ class WorkflowSuite(pf.Suite):
         ... }
         >>> dict_of_all_family_objs = suite.generate_tree(config)
         """
+        # Extract header configuration if present
+        headers_config = nested_config.pop('headers', None)
+        if headers_config:
+            self._header_paths['head'] = headers_config.get('head') or None
+            self._header_paths['tail'] = headers_config.get('tail') or None
+            self._header_paths['envir'] = headers_config.get('envir') or None
+
         created_families = {}
 
         def _create_tree_recursive(parent_node, config_dict, parent_path=''):
@@ -257,9 +286,14 @@ class WorkflowSuite(pf.Suite):
         The suite directory structure created is as follows:
 
         - def/ : Contains the suite definition file and validates the suite
-        - include/ : Contains any include files (header files)
+        - include/ : Contains header files (head.h, tail.h, envir-p1.h)
         - scripts/ : Contains ecf script files, organized by families as
           subdirectories if applicable
+
+        Header files can be customized by including a 'headers' section in the
+        config passed to generate_tree(). If custom paths are provided, those
+        files are used; otherwise, default headers from the package's static/
+        directory are copied.
 
         The method performs the following operations:
 
@@ -267,6 +301,7 @@ class WorkflowSuite(pf.Suite):
         2. Creates subdirectories for def, include, and scripts
         3. Validates the suite definition with check_definition()
         4. Deploys suite scripts using deploy_suite()
+        5. Copies header files to include/ (custom or default)
 
         Examples
         --------
@@ -310,5 +345,11 @@ class WorkflowSuite(pf.Suite):
         # Deploy scripts and class-attribute headers (workflowtask_head.h, etc.)
         self.deploy_suite()
 
-        # Copy any missing static headers (head.h, envir-p1.h, tail.h) from static/
-        ensure_headers(include_dir)
+        # Copy headers (head.h, envir-p1.h, tail.h)
+        # Uses custom paths from config if provided, otherwise uses static/ defaults
+        ensure_headers(
+            include_dir,
+            head_path=self._header_paths.get('head'),
+            tail_path=self._header_paths.get('tail'),
+            envir_path=self._header_paths.get('envir')
+        )
