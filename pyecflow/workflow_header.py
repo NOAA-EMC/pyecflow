@@ -195,7 +195,7 @@ class _HeaderSet:
 
 
 # ---------------------------------------------------------------------------
-# Backward compatibility functions
+# Public API functions
 # ---------------------------------------------------------------------------
 
 def read_static_file(filename: str) -> str:

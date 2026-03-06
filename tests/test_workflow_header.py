@@ -148,8 +148,8 @@ class TestEnsureHeaders:
 
         for header in HEADER_FILES:
             original = read_static_file(header)
-            copied = (include_dir / header).read_text()
-            assert copied == original
+            file_content = (include_dir / header).read_text()
+            assert file_content == original
 
 
 class TestHeadersExist:

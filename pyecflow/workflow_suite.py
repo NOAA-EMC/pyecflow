@@ -181,8 +181,8 @@ class WorkflowSuite(pf.Suite):
         ... }
         >>> dict_of_all_family_objs = suite.generate_tree(config)
         """
-        # Extract header configuration if present
-        headers_config = nested_config.pop('headers', None)
+        # Extract header configuration if present (use get to avoid mutating caller's dict)
+        headers_config = nested_config.get('headers', None)
         if headers_config:
             self._header_paths['head'] = headers_config.get('head') or None
             self._header_paths['tail'] = headers_config.get('tail') or None
@@ -213,6 +213,9 @@ class WorkflowSuite(pf.Suite):
             created AnchorFamily objects keyed by full path.
             """
             for family_name, family_config in config_dict.items():
+                # Skip reserved keys that aren't family names
+                if family_name == 'headers':
+                    continue
                 # Skip empty family names
                 if not family_name:
                     warnings.warn("family name is empty, skipping")

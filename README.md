@@ -108,5 +108,3 @@ config = {
 ```
 
 If you omit the `headers` section entirely, or leave any path empty/null, the default headers from the package will be used.
-
-For more examples, see the notebooks in the `notebooks/` directory.
