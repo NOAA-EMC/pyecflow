@@ -11,10 +11,9 @@ import pytest
 from pyecflow.workflow_header import (
     HEADER_FILES,
     STATIC_DIR,
-    _Header,
     _FileHeader,
-    _StaticHeader,
     _HeaderSet,
+    _StaticHeader,
     ensure_headers,
     headers_exist,
     list_missing_headers,

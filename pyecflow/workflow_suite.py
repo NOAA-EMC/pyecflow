@@ -342,7 +342,7 @@ class WorkflowSuite(pf.Suite):
         if not os.path.exists(scripts_dir):
             os.makedirs(scripts_dir, exist_ok=True)
 
-        # Deploy scripts and class-attribute headers (workflowtask_head.h, etc.)
+        # Deploy scripts
         self.deploy_suite()
 
         # Copy headers (head.h, envir-p1.h, tail.h)
