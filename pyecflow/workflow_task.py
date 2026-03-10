@@ -1,8 +1,8 @@
 """Workflow task module for pyecflow.
 
 This module provides the WorkflowTask class for creating tasks in ecFlow
-workflows. Header files (head.h, tail.h, envir-p1.h) are managed by
-workflow_header.py and deployed to the suite's include/ directory.
+workflows. Include files (head.h, tail.h, envir-p1.h) are managed by
+workflow_include.py and deployed to the suite's include/ directory.
 
 Classes
 -------
@@ -18,7 +18,7 @@ class WorkflowTask(pf.Task):
     # Docstring intentionally omitted to prevent pyflow from using it as %manual.
     # See module docstring for class documentation.
     #
-    # Headers (head.h, tail.h, envir-p1.h) are deployed by workflow_header.py.
+    # Include files (head.h, tail.h, envir-p1.h) are deployed by workflow_include.py.
     # pyflow generates %include <head.h> and %include <tail.h> directives.
     #
     # Parameters:

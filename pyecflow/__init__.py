@@ -27,7 +27,7 @@ __version__ : str
 
 Examples
 --------
-Basic usage with default headers:
+Basic usage with default includes:
 
 >>> from pyecflow import WorkflowSuite
 >>> import pyflow as pf
@@ -41,10 +41,10 @@ Basic usage with default headers:
 >>> suite.generate_tree(config)  # Creates family hierarchy and tasks
 >>> suite.generate_suite(suite_dir='/path/to/suite')  # Deploys files
 
-With custom header files (optional):
+With custom include files (optional):
 
 >>> config = {
-...     'headers': {  # Optional: custom header file paths
+...     'includes': {  # Optional: custom include file paths
 ...         'head': '/path/to/head.h',
 ...         'tail': '/path/to/tail.h',
 ...         'envir': '/path/to/envir-p1.h'
@@ -53,7 +53,7 @@ With custom header files (optional):
 ...         'tasks': {'task1': {'variables': {...}, 'script': '...'}}
 ...     }
 ... }
->>> suite.generate_tree(config)  # Extracts header paths from config
+>>> suite.generate_tree(config)  # Extracts include paths from config
 """
 
 from __future__ import absolute_import

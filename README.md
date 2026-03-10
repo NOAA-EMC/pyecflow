@@ -84,14 +84,30 @@ suite.generate_tree(config)
 suite.generate_suite(suite_dir='/path/to/suite')
 ```
 
-### Custom Header Files
+### Custom Include Files
 
-By default, `pyecflow` uses standard header files (`head.h`, `tail.h`, `envir-p1.h`) from the package's `static/` directory. You can specify custom header files in your configuration:
+By default, `pyecflow` uses standard include files (`head.h`, `tail.h`, `envir-p1.h`) from the package's `static/` directory. There are three ways to customize these files, in order of precedence:
+
+#### 1. Method Parameters (Highest Priority)
+
+Pass paths directly to `generate_suite()`:
+
+```python
+suite.generate_suite(
+    suite_dir='/path/to/suite',
+    head_path='/custom/head.h',
+    tail_path='/custom/tail.h',
+    envir_path='/custom/envir-p1.h'
+)
+```
+
+#### 2. Config Section
+
+Include an `'includes'` section in your configuration:
 
 ```python
 config = {
-    # Optional: specify custom header file paths
-    'headers': {
+    'includes': {
         'head': '/path/to/custom/head.h',    # or omit for default
         'tail': '/path/to/custom/tail.h',    # or omit for default
         'envir': '/path/to/custom/envir-p1.h'  # or omit for default
@@ -107,4 +123,6 @@ config = {
 }
 ```
 
-If you omit the `headers` section entirely, or leave any path empty/null, the default headers from the package will be used.
+#### 3. Package Defaults (Lowest Priority)
+
+If you omit the `includes` section entirely, or leave any path empty/null, the default includes from the package's `static/` directory will be used.

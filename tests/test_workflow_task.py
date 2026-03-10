@@ -67,8 +67,8 @@ class TestWorkflowTask:
 
         This test verifies that a WorkflowTask can be created with a context
         containing variables and a script, and that these values are properly
-        set on the task instance. Headers (head.h, tail.h, envir-p1.h) are
-        managed separately by workflow_header.py.
+        set on the task instance. Include files (head.h, tail.h, envir-p1.h) are
+        managed separately by workflow_include.py.
         """
         tAa1c = {'variables': {'NUMBER': 101},
                  'script': "echo family_Aa NUMBER=$NUMBER"}

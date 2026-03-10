@@ -1,17 +1,20 @@
-"""Workflow header module for pyecflow.
+"""Workflow include module for pyecflow.
 
-This module provides functions to manage header files (head.h, envir-p1.h,
+This module provides functions to manage include files (head.h, envir-p1.h,
 tail.h) for ecFlow suites. Users can either provide custom paths to these
 files or use the default files from the package's static/ directory.
 
+In ECMWF terminology, these are "includes" - files that get included into
+ecFlow task scripts. head.h and envir-p1.h are headers, tail.h is a footer.
+
 Functions
 ---------
-ensure_headers
-    Ensure all required header files are present in the include directory.
-headers_exist
-    Check if all required header files exist in the include directory.
-list_missing_headers
-    List header files that are missing from the include directory.
+ensure_includes
+    Ensure all required include files are present in the include directory.
+includes_exist
+    Check if all required include files exist in the include directory.
+list_missing_includes
+    List include files that are missing from the include directory.
 read_static_file
     Read the contents of a file from the package's static/ directory.
 """
@@ -19,42 +22,42 @@ read_static_file
 import os
 from abc import ABC, abstractmethod
 
-# Header files that should be present in the include/ directory
-HEADER_FILES = ['head.h', 'envir-p1.h', 'tail.h']
+# Include files that should be present in the include/ directory
+INCLUDE_FILES = ['head.h', 'envir-p1.h', 'tail.h']
 
 # Path to the static/ directory relative to this file
 STATIC_DIR = os.path.join(os.path.dirname(__file__), 'static')
 
-# Default header file names
+# Default include file names
 DEFAULT_HEAD = 'head.h'
 DEFAULT_TAIL = 'tail.h'
 DEFAULT_ENVIR = 'envir-p1.h'
 
 
-class _Header(ABC):
-    """Abstract base class for header file management (internal use)."""
+class _Include(ABC):
+    """Abstract base class for include file management (internal use)."""
 
     def __init__(self, name: str):
         self._name = name
 
     @property
     def name(self) -> str:
-        """str: The name of the header file."""
+        """str: The name of the include file."""
         return self._name
 
     @abstractmethod
     def get_content(self) -> str:
-        """Get the content of the header file.
+        """Get the content of the include file.
 
         Returns
         -------
         str
-            The content of the header file.
+            The content of the include file.
         """
         pass
 
     def install(self, include_dir: str) -> str:
-        """Install the header file to the include directory.
+        """Install the include file to the include directory.
 
         Parameters
         ----------
@@ -64,7 +67,7 @@ class _Header(ABC):
         Returns
         -------
         str
-            The path to the installed header file.
+            The path to the installed include file.
         """
         if not os.path.exists(include_dir):
             os.makedirs(include_dir, exist_ok=True)
@@ -76,8 +79,8 @@ class _Header(ABC):
         return dest_path
 
 
-class _FileHeader(_Header):
-    """Header that reads content from a user-specified file path (internal use)."""
+class _FileInclude(_Include):
+    """Include that reads content from a user-specified file path (internal use)."""
 
     def __init__(self, name: str, path: str):
         super().__init__(name)
@@ -103,14 +106,14 @@ class _FileHeader(_Header):
         """
         if not os.path.isfile(self._path):
             raise FileNotFoundError(
-                f"Header source file '{self._path}' not found"
+                f"Include source file '{self._path}' not found"
             )
         with open(self._path) as f:
             return f.read()
 
 
-class _StaticHeader(_Header):
-    """Header that uses the default file from the package's static/ directory (internal use)."""
+class _StaticInclude(_Include):
+    """Include that uses the default file from the package's static/ directory (internal use)."""
 
     def get_content(self) -> str:
         """Read and return the content from the static directory.
@@ -128,14 +131,14 @@ class _StaticHeader(_Header):
         file_path = os.path.join(STATIC_DIR, self._name)
         if not os.path.isfile(file_path):
             raise FileNotFoundError(
-                f"Header file '{self._name}' not found in static/"
+                f"Include file '{self._name}' not found in static/"
             )
         with open(file_path) as f:
             return f.read()
 
 
-class _HeaderSet:
-    """A collection of header files for an ecFlow suite (internal use)."""
+class _IncludeSet:
+    """A collection of include files for an ecFlow suite (internal use)."""
 
     def __init__(
         self,
@@ -143,39 +146,39 @@ class _HeaderSet:
         tail_path: str = None,
         envir_path: str = None
     ):
-        # Create appropriate header objects based on provided paths
+        # Create appropriate include objects based on provided paths
         if head_path:
-            self._head = _FileHeader(DEFAULT_HEAD, head_path)
+            self._head = _FileInclude(DEFAULT_HEAD, head_path)
         else:
-            self._head = _StaticHeader(DEFAULT_HEAD)
+            self._head = _StaticInclude(DEFAULT_HEAD)
 
         if tail_path:
-            self._tail = _FileHeader(DEFAULT_TAIL, tail_path)
+            self._tail = _FileInclude(DEFAULT_TAIL, tail_path)
         else:
-            self._tail = _StaticHeader(DEFAULT_TAIL)
+            self._tail = _StaticInclude(DEFAULT_TAIL)
 
         if envir_path:
-            self._envir = _FileHeader(DEFAULT_ENVIR, envir_path)
+            self._envir = _FileInclude(DEFAULT_ENVIR, envir_path)
         else:
-            self._envir = _StaticHeader(DEFAULT_ENVIR)
+            self._envir = _StaticInclude(DEFAULT_ENVIR)
 
     @property
-    def head(self) -> _Header:
-        """Header: The head.h header object."""
+    def head(self) -> _Include:
+        """Include: The head.h include object."""
         return self._head
 
     @property
-    def tail(self) -> _Header:
-        """Header: The tail.h header object."""
+    def tail(self) -> _Include:
+        """Include: The tail.h include object."""
         return self._tail
 
     @property
-    def envir(self) -> _Header:
-        """Header: The envir-p1.h header object."""
+    def envir(self) -> _Include:
+        """Include: The envir-p1.h include object."""
         return self._envir
 
     def install(self, include_dir: str) -> list:
-        """Install all header files to the include directory.
+        """Install all include files to the include directory.
 
         Parameters
         ----------
@@ -188,8 +191,8 @@ class _HeaderSet:
             List of installed file paths.
         """
         installed = []
-        for header in [self._head, self._tail, self._envir]:
-            path = header.install(include_dir)
+        for inc in [self._head, self._tail, self._envir]:
+            path = inc.install(include_dir)
             installed.append(path)
         return installed
 
@@ -216,17 +219,17 @@ def read_static_file(filename: str) -> str:
     FileNotFoundError
         If the file does not exist in the static/ directory.
     """
-    header = _StaticHeader(filename)
-    return header.get_content()
+    inc = _StaticInclude(filename)
+    return inc.get_content()
 
 
-def ensure_headers(
+def ensure_includes(
     include_dir: str,
     head_path: str = None,
     tail_path: str = None,
     envir_path: str = None
 ) -> list:
-    """Ensure all required header files are present in the include directory.
+    """Ensure all required include files are present in the include directory.
 
     If custom paths are provided, those files will be used. Otherwise,
     files are copied from the package's static/ directory.
@@ -253,17 +256,17 @@ def ensure_headers(
 
     Examples
     --------
-    Using default headers (backward compatible):
+    Using default includes (backward compatible):
 
-    >>> copied = ensure_headers('/path/to/suite/include')
+    >>> copied = ensure_includes('/path/to/suite/include')
     >>> if copied:
     ...     print(f"Copied: {copied}")
     ... else:
-    ...     print("All headers already present")
+    ...     print("All includes already present")
 
-    Using custom header files:
+    Using custom include files:
 
-    >>> copied = ensure_headers(
+    >>> copied = ensure_includes(
     ...     '/path/to/suite/include',
     ...     head_path='/custom/head.h',
     ...     tail_path='/custom/tail.h'
@@ -275,35 +278,35 @@ def ensure_headers(
     if not os.path.exists(include_dir):
         os.makedirs(include_dir, exist_ok=True)
 
-    # Build list of (header_file_name, custom_path) tuples
-    header_configs = [
+    # Build list of (include_file_name, custom_path) tuples
+    include_configs = [
         (DEFAULT_HEAD, head_path),
         (DEFAULT_TAIL, tail_path),
         (DEFAULT_ENVIR, envir_path),
     ]
 
-    for header_name, custom_path in header_configs:
-        dest_path = os.path.join(include_dir, header_name)
+    for include_name, custom_path in include_configs:
+        dest_path = os.path.join(include_dir, include_name)
 
-        # Determine if we should copy/install this header
+        # Determine if we should copy/install this include
         # - If custom path provided: always install (user wants their file)
         # - If no custom path: only install if file doesn't exist (backward compat)
         should_install = custom_path is not None or not os.path.isfile(dest_path)
 
         if should_install:
             if custom_path:
-                header = _FileHeader(header_name, custom_path)
+                inc = _FileInclude(include_name, custom_path)
             else:
-                header = _StaticHeader(header_name)
+                inc = _StaticInclude(include_name)
 
-            header.install(include_dir)
-            copied_files.append(header_name)
+            inc.install(include_dir)
+            copied_files.append(include_name)
 
     return copied_files
 
 
-def headers_exist(include_dir: str) -> bool:
-    """Check if all required header files exist in the include directory.
+def includes_exist(include_dir: str) -> bool:
+    """Check if all required include files exist in the include directory.
 
     Parameters
     ----------
@@ -313,16 +316,16 @@ def headers_exist(include_dir: str) -> bool:
     Returns
     -------
     bool
-        True if all header files exist, False otherwise.
+        True if all include files exist, False otherwise.
     """
-    for header_file in HEADER_FILES:
-        if not os.path.isfile(os.path.join(include_dir, header_file)):
+    for include_file in INCLUDE_FILES:
+        if not os.path.isfile(os.path.join(include_dir, include_file)):
             return False
     return True
 
 
-def list_missing_headers(include_dir: str) -> list:
-    """List header files that are missing from the include directory.
+def list_missing_includes(include_dir: str) -> list:
+    """List include files that are missing from the include directory.
 
     Parameters
     ----------
@@ -332,10 +335,10 @@ def list_missing_headers(include_dir: str) -> list:
     Returns
     -------
     list
-        List of missing header filenames.
+        List of missing include filenames.
     """
     missing = []
-    for header_file in HEADER_FILES:
-        if not os.path.isfile(os.path.join(include_dir, header_file)):
-            missing.append(header_file)
+    for include_file in INCLUDE_FILES:
+        if not os.path.isfile(os.path.join(include_dir, include_file)):
+            missing.append(include_file)
     return missing
