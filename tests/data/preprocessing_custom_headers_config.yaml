@@ -1,0 +1,11 @@
+# Test configuration for ecFlow preprocessing with custom headers
+# Used by test_ecflow_preprocessing.py
+# Note: headers paths are injected at test runtime
+
+family_A:
+  tasks:
+    task_A1:
+      variables:
+        VAR: "1"
+      script: "echo Test with custom headers"
+  children: {}
