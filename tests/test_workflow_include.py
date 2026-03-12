@@ -12,8 +12,8 @@ from pyecflow.workflow_include import (
     INCLUDE_FILES,
     STATIC_DIR,
     _FileInclude,
+    _get_static_path,
     _IncludeSet,
-    _StaticInclude,
     ensure_includes,
     includes_exist,
     list_missing_includes,
@@ -240,25 +240,25 @@ class TestListMissingIncludes:
         assert set(missing) == set(INCLUDE_FILES)
 
 
-class Test_StaticInclude:
-    """Test the _StaticInclude class."""
+class Test_FileIncludeWithStaticPath:
+    """Test _FileInclude with static directory paths."""
 
     def test_get_content_reads_head_file(self):
-        """Test that _StaticInclude can read head.h from static/."""
-        inc = _StaticInclude('head.h')
+        """Test that _FileInclude can read head.h from static/."""
+        inc = _FileInclude('head.h', _get_static_path('head.h'))
         content = inc.get_content()
         assert content.startswith('#')
         assert 'ECF_NAME' in content
 
     def test_get_content_reads_tail_file(self):
-        """Test that _StaticInclude can read tail.h from static/."""
-        inc = _StaticInclude('tail.h')
+        """Test that _FileInclude can read tail.h from static/."""
+        inc = _FileInclude('tail.h', _get_static_path('tail.h'))
         content = inc.get_content()
         assert 'ecflow_client' in content
 
     def test_name_property(self):
         """Test the name property returns the include filename."""
-        inc = _StaticInclude('head.h')
+        inc = _FileInclude('head.h', _get_static_path('head.h'))
         assert inc.name == 'head.h'
 
     def test_install_creates_file(self, tmp_path):
@@ -266,7 +266,7 @@ class Test_StaticInclude:
         include_dir = tmp_path / 'include'
         include_dir.mkdir()
 
-        inc = _StaticInclude('head.h')
+        inc = _FileInclude('head.h', _get_static_path('head.h'))
         result = inc.install(str(include_dir))
 
         assert (include_dir / 'head.h').exists()
@@ -277,18 +277,18 @@ class Test_StaticInclude:
         include_dir = tmp_path / 'include'
         assert not include_dir.exists()
 
-        inc = _StaticInclude('head.h')
+        inc = _FileInclude('head.h', _get_static_path('head.h'))
         inc.install(str(include_dir))
 
         assert include_dir.exists()
         assert (include_dir / 'head.h').exists()
 
     def test_raises_for_nonexistent_static_file(self):
-        """Test that _StaticInclude raises FileNotFoundError for missing file."""
-        inc = _StaticInclude('nonexistent.h')
+        """Test that _FileInclude raises FileNotFoundError for missing file."""
+        inc = _FileInclude('nonexistent.h', _get_static_path('nonexistent.h'))
         with pytest.raises(FileNotFoundError) as excinfo:
             inc.get_content()
-        assert 'not found in static' in str(excinfo.value)
+        assert 'not found' in str(excinfo.value)
 
 
 class Test_FileInclude:
@@ -339,13 +339,17 @@ class Test_FileInclude:
 class Test_IncludeSet:
     """Test the _IncludeSet class."""
 
-    def test_default_creates_static_includes(self):
-        """Test that _IncludeSet with no args creates _StaticIncludes."""
-        includes = _IncludeSet()
+    def test_static_paths_creates_includes(self):
+        """Test that _IncludeSet with static paths creates _FileIncludes."""
+        includes = _IncludeSet(
+            head_path=_get_static_path('head.h'),
+            tail_path=_get_static_path('tail.h'),
+            envir_path=_get_static_path('envir-p1.h')
+        )
 
-        assert isinstance(includes.head, _StaticInclude)
-        assert isinstance(includes.tail, _StaticInclude)
-        assert isinstance(includes.envir, _StaticInclude)
+        assert isinstance(includes.head, _FileInclude)
+        assert isinstance(includes.tail, _FileInclude)
+        assert isinstance(includes.envir, _FileInclude)
 
     def test_custom_paths_create_file_includes(self, tmp_path):
         """Test that _IncludeSet with custom paths creates _FileIncludes."""
@@ -364,24 +368,35 @@ class Test_IncludeSet:
         assert isinstance(includes.head, _FileInclude)
         assert isinstance(includes.tail, _FileInclude)
         assert isinstance(includes.envir, _FileInclude)
+        assert includes.head.path == str(custom_head)
+        assert includes.tail.path == str(custom_tail)
+        assert includes.envir.path == str(custom_envir)
 
-    def test_mixed_paths_creates_mixed_includes(self, tmp_path):
-        """Test that _IncludeSet with some custom paths creates mixed includes."""
+    def test_mixed_custom_and_static_paths(self, tmp_path):
+        """Test that _IncludeSet works with mixed custom and static paths."""
         custom_head = tmp_path / 'head.h'
         custom_head.write_text('# custom head')
 
-        includes = _IncludeSet(head_path=str(custom_head))
+        includes = _IncludeSet(
+            head_path=str(custom_head),
+            tail_path=_get_static_path('tail.h'),
+            envir_path=_get_static_path('envir-p1.h')
+        )
 
-        assert isinstance(includes.head, _FileInclude)
-        assert isinstance(includes.tail, _StaticInclude)
-        assert isinstance(includes.envir, _StaticInclude)
+        assert includes.head.path == str(custom_head)
+        assert 'static' in includes.tail.path
+        assert 'static' in includes.envir.path
 
     def test_install_all_includes(self, tmp_path):
         """Test that install() installs all three include files."""
         include_dir = tmp_path / 'include'
         include_dir.mkdir()
 
-        includes = _IncludeSet()
+        includes = _IncludeSet(
+            head_path=_get_static_path('head.h'),
+            tail_path=_get_static_path('tail.h'),
+            envir_path=_get_static_path('envir-p1.h')
+        )
         installed = includes.install(str(include_dir))
 
         assert len(installed) == 3

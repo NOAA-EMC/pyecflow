@@ -20,7 +20,6 @@ read_static_file
 """
 
 import os
-from abc import ABC, abstractmethod
 
 # Include files that should be present in the include/ directory
 INCLUDE_FILES = ['head.h', 'envir-p1.h', 'tail.h']
@@ -34,57 +33,46 @@ DEFAULT_TAIL = 'tail.h'
 DEFAULT_ENVIR = 'envir-p1.h'
 
 
-class _Include(ABC):
-    """Abstract base class for include file management (internal use)."""
+def _get_static_path(name: str) -> str:
+    """Get the path to a file in the static/ directory.
 
-    def __init__(self, name: str):
+    Parameters
+    ----------
+    name : str
+        The name of the file.
+
+    Returns
+    -------
+    str
+        The full path to the file in the static/ directory.
+    """
+    return os.path.join(STATIC_DIR, name)
+
+
+class _FileInclude:
+    """Include file manager (internal use).
+
+    Reads content from a specified file path and installs it to the
+    suite's include directory.
+    """
+
+    def __init__(self, name: str, path: str):
+        """Initialize a file include.
+
+        Parameters
+        ----------
+        name : str
+            The name of the include file (e.g., 'head.h').
+        path : str
+            Path to the source file.
+        """
         self._name = name
+        self._path = path
 
     @property
     def name(self) -> str:
         """str: The name of the include file."""
         return self._name
-
-    @abstractmethod
-    def get_content(self) -> str:
-        """Get the content of the include file.
-
-        Returns
-        -------
-        str
-            The content of the include file.
-        """
-        pass
-
-    def install(self, include_dir: str) -> str:
-        """Install the include file to the include directory.
-
-        Parameters
-        ----------
-        include_dir : str
-            The path to the suite's include/ directory.
-
-        Returns
-        -------
-        str
-            The path to the installed include file.
-        """
-        if not os.path.exists(include_dir):
-            os.makedirs(include_dir, exist_ok=True)
-
-        dest_path = os.path.join(include_dir, self._name)
-        content = self.get_content()
-        with open(dest_path, 'w') as f:
-            f.write(content)
-        return dest_path
-
-
-class _FileInclude(_Include):
-    """Include that reads content from a user-specified file path (internal use)."""
-
-    def __init__(self, name: str, path: str):
-        super().__init__(name)
-        self._path = path
 
     @property
     def path(self) -> str:
@@ -111,30 +99,27 @@ class _FileInclude(_Include):
         with open(self._path) as f:
             return f.read()
 
+    def install(self, include_dir: str) -> str:
+        """Install the include file to the include directory.
 
-class _StaticInclude(_Include):
-    """Include that uses the default file from the package's static/ directory (internal use)."""
-
-    def get_content(self) -> str:
-        """Read and return the content from the static directory.
+        Parameters
+        ----------
+        include_dir : str
+            The path to the suite's include/ directory.
 
         Returns
         -------
         str
-            The content of the static file.
-
-        Raises
-        ------
-        FileNotFoundError
-            If the file does not exist in the static/ directory.
+            The path to the installed include file.
         """
-        file_path = os.path.join(STATIC_DIR, self._name)
-        if not os.path.isfile(file_path):
-            raise FileNotFoundError(
-                f"Include file '{self._name}' not found in static/"
-            )
-        with open(file_path) as f:
-            return f.read()
+        if not os.path.exists(include_dir):
+            os.makedirs(include_dir, exist_ok=True)
+
+        dest_path = os.path.join(include_dir, self._name)
+        content = self.get_content()
+        with open(dest_path, 'w') as f:
+            f.write(content)
+        return dest_path
 
 
 class _IncludeSet:
@@ -142,39 +127,38 @@ class _IncludeSet:
 
     def __init__(
         self,
-        head_path: str = None,
-        tail_path: str = None,
-        envir_path: str = None
+        head_path: str,
+        tail_path: str,
+        envir_path: str
     ):
-        # Create appropriate include objects based on provided paths
-        if head_path:
-            self._head = _FileInclude(DEFAULT_HEAD, head_path)
-        else:
-            self._head = _StaticInclude(DEFAULT_HEAD)
+        """Initialize the include set.
 
-        if tail_path:
-            self._tail = _FileInclude(DEFAULT_TAIL, tail_path)
-        else:
-            self._tail = _StaticInclude(DEFAULT_TAIL)
-
-        if envir_path:
-            self._envir = _FileInclude(DEFAULT_ENVIR, envir_path)
-        else:
-            self._envir = _StaticInclude(DEFAULT_ENVIR)
+        Parameters
+        ----------
+        head_path : str
+            Path to the head.h file.
+        tail_path : str
+            Path to the tail.h file.
+        envir_path : str
+            Path to the envir-p1.h file.
+        """
+        self._head = _FileInclude(DEFAULT_HEAD, head_path)
+        self._tail = _FileInclude(DEFAULT_TAIL, tail_path)
+        self._envir = _FileInclude(DEFAULT_ENVIR, envir_path)
 
     @property
-    def head(self) -> _Include:
-        """Include: The head.h include object."""
+    def head(self) -> _FileInclude:
+        """_FileInclude: The head.h include object."""
         return self._head
 
     @property
-    def tail(self) -> _Include:
-        """Include: The tail.h include object."""
+    def tail(self) -> _FileInclude:
+        """_FileInclude: The tail.h include object."""
         return self._tail
 
     @property
-    def envir(self) -> _Include:
-        """Include: The envir-p1.h include object."""
+    def envir(self) -> _FileInclude:
+        """_FileInclude: The envir-p1.h include object."""
         return self._envir
 
     def install(self, include_dir: str) -> list:
@@ -219,8 +203,13 @@ def read_static_file(filename: str) -> str:
     FileNotFoundError
         If the file does not exist in the static/ directory.
     """
-    inc = _StaticInclude(filename)
-    return inc.get_content()
+    static_path = _get_static_path(filename)
+    if not os.path.isfile(static_path):
+        raise FileNotFoundError(
+            f"Include file '{filename}' not found in static/"
+        )
+    with open(static_path) as f:
+        return f.read()
 
 
 def ensure_includes(
@@ -294,11 +283,9 @@ def ensure_includes(
         should_install = custom_path is not None or not os.path.isfile(dest_path)
 
         if should_install:
-            if custom_path:
-                inc = _FileInclude(include_name, custom_path)
-            else:
-                inc = _StaticInclude(include_name)
-
+            # Use custom path if provided, otherwise use default from static/
+            source_path = custom_path if custom_path else _get_static_path(include_name)
+            inc = _FileInclude(include_name, source_path)
             inc.install(include_dir)
             copied_files.append(include_name)
 
