@@ -284,10 +284,9 @@ class Test_FileIncludeWithStaticPath:
         assert (include_dir / 'head.h').exists()
 
     def test_raises_for_nonexistent_static_file(self):
-        """Test that _FileInclude raises FileNotFoundError for missing file."""
-        inc = _FileInclude('nonexistent.h', _get_static_path('nonexistent.h'))
+        """Test that _get_static_path raises FileNotFoundError for missing file."""
         with pytest.raises(FileNotFoundError) as excinfo:
-            inc.get_content()
+            _get_static_path('nonexistent.h')
         assert 'not found' in str(excinfo.value)
 
 

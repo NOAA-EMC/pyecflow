@@ -82,6 +82,110 @@ class TestWorkflowTask:
         # Verify variable is set correctly
         assert tAa1.lookup_variable('NUMBER') == 101
 
+    def test_workflow_task_generate_script_format(self, tmp_path):
+        """Test that generate_script produces correct %include directive order.
+
+        Verifies the .ecf file format follows the traditional ecFlow pattern:
+            1. #!/bin/bash shebang
+            2. %include <head.h>
+            3. %include <envir-p1.h>
+            4. %nopp / script content / %end
+            5. %include <tail.h>
+            6. %manual section (always present)
+        """
+        suite_dir = tmp_path / "testSuite"
+
+        my_suite = WorkflowSuite('testSuite',
+                                 host=pf.LocalHost('localhost'),
+                                 files=str(suite_dir / 'scripts'))
+
+        with my_suite:
+            task = WorkflowTask('test_task', {
+                'script': 'echo "Hello World"',
+                'variables': {'VAR1': 'value1'}
+            })
+            lines, headers = task.generate_script()
+
+        script_content = '\n'.join(lines)
+        print(f"\nGenerated script:\n{script_content}")
+
+        # Verify headers list is empty (includes handled inline)
+        assert headers == [], "Headers should be empty since includes are inline"
+
+        # Verify correct order of elements
+        shebang_pos = script_content.find('#!/bin/bash')
+        head_pos = script_content.find('%include <head.h>')
+        envir_pos = script_content.find('%include <envir-p1.h>')
+        nopp_pos = script_content.find('%nopp')
+        script_pos = script_content.find('echo "Hello World"')
+        end_pos = script_content.find('%end')
+        tail_pos = script_content.find('%include <tail.h>')
+        manual_pos = script_content.find('%manual')
+
+        # All elements must be present
+        assert shebang_pos >= 0, "Shebang not found"
+        assert head_pos >= 0, "head.h include not found"
+        assert envir_pos >= 0, "envir-p1.h include not found"
+        assert nopp_pos >= 0, "%nopp not found"
+        assert script_pos >= 0, "Script content not found"
+        assert end_pos >= 0, "%end not found"
+        assert tail_pos >= 0, "tail.h include not found"
+        assert manual_pos >= 0, "%manual not found (should always be present)"
+
+        # Verify correct order
+        assert shebang_pos < head_pos, "Shebang must come before head.h"
+        assert head_pos < envir_pos, "head.h must come before envir-p1.h"
+        assert envir_pos < nopp_pos, "envir-p1.h must come before %nopp"
+        assert nopp_pos < script_pos, "%nopp must come before script content"
+        assert script_pos < end_pos, "Script content must come before %end"
+        assert end_pos < tail_pos, "%end must come before tail.h"
+        assert tail_pos < manual_pos, "tail.h must come before %manual"
+
+        print("\nAll %include directives in correct order!")
+
+    def test_workflow_task_manual_placement(self, tmp_path):
+        """Test that %manual section appears after %include <tail.h>.
+
+        When a task has a manual, it should be placed at the end of the .ecf file
+        after the tail include, wrapped in %manual/%end directives.
+        """
+        suite_dir = tmp_path / "testSuite"
+
+        my_suite = WorkflowSuite('testSuite',
+                                 host=pf.LocalHost('localhost'),
+                                 files=str(suite_dir / 'scripts'))
+
+        with my_suite:
+            task = WorkflowTask('test_task', {
+                'script': 'echo "Hello World"',
+                'variables': {'VAR1': 'value1'},
+                'manual': 'This is the manual page for the task.\nIt explains what the task does.'
+            })
+            lines, headers = task.generate_script()
+
+        script_content = '\n'.join(lines)
+        print(f"\nGenerated script with manual:\n{script_content}")
+
+        # Verify %manual appears after %include <tail.h>
+        tail_pos = script_content.find('%include <tail.h>')
+        manual_pos = script_content.find('%manual')
+
+        assert tail_pos >= 0, "tail.h include not found"
+        assert manual_pos >= 0, "%manual not found"
+        assert tail_pos < manual_pos, "%manual must come after %include <tail.h>"
+
+        # Verify manual content is present
+        assert "This is the manual page for the task." in script_content
+        assert "It explains what the task does." in script_content
+
+        # Verify %manual is closed with %end
+        # Find the %end that closes %manual (should be after the manual content)
+        manual_content_pos = script_content.find("This is the manual page")
+        end_after_manual = script_content.find('%end', manual_content_pos)
+        assert end_after_manual > manual_content_pos, "%end must close the %manual section"
+
+        print("\n%manual section correctly placed after tail.h!")
+
     def test_task_children_exist(self, tmp_path):
         """Test that tasks are added to the correct anchor families.
 

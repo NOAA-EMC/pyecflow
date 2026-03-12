@@ -45,8 +45,18 @@ def _get_static_path(name: str) -> str:
     -------
     str
         The full path to the file in the static/ directory.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the file does not exist in the static/ directory.
     """
-    return os.path.join(STATIC_DIR, name)
+    path = os.path.join(STATIC_DIR, name)
+    if not os.path.isfile(path):
+        raise FileNotFoundError(
+            f"Include file '{name}' not found in static/"
+        )
+    return path
 
 
 class _FileInclude:
@@ -204,10 +214,6 @@ def read_static_file(filename: str) -> str:
         If the file does not exist in the static/ directory.
     """
     static_path = _get_static_path(filename)
-    if not os.path.isfile(static_path):
-        raise FileNotFoundError(
-            f"Include file '{filename}' not found in static/"
-        )
     with open(static_path) as f:
         return f.read()
 

@@ -126,3 +126,37 @@ config = {
 #### 3. Package Defaults (Lowest Priority)
 
 If you omit the `includes` section entirely, or leave any path empty/null, the default includes from the package's `static/` directory will be used.
+
+### Generated .ecf File Format
+
+The generated `.ecf` files use the traditional ecFlow `%include` directive approach:
+
+```bash
+#!/bin/bash
+
+%include <head.h>
+%include <envir-p1.h>
+
+%nopp
+
+# Your script content here
+echo "Hello World"
+
+%end
+
+%include <tail.h>
+
+%manual
+Optional manual/help text for the task.
+%end
+```
+
+**How it works:**
+1. Include files (`head.h`, `envir-p1.h`, `tail.h`) are deployed to `suite/include/`
+2. The `.ecf` files contain `%include` directives that reference these files by name
+3. At runtime, ecFlow's pre-processor expands the `%include` directives by reading from the `ECF_INCLUDE` directory
+
+This approach allows you to:
+- Maintain a single source of truth for headers/footers
+- Easily swap include files without regenerating `.ecf` files
+- Follow standard ecFlow patterns that operations teams expect
