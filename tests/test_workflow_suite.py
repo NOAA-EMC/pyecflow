@@ -79,7 +79,7 @@ class TestIncludeConfiguration:
     """Test suite for include file configuration via YAML config."""
 
     def test_default_includes_copied(self, tmp_path):
-        """Test that default includes are copied when no includes config provided."""
+        """Test that required includes are copied when no includes config provided."""
         suite_dir = tmp_path / "testSuite"
 
         config = {
@@ -101,11 +101,12 @@ class TestIncludeConfiguration:
         my_suite.generate_tree(config)
         my_suite.generate_suite(suite_dir=str(suite_dir))
 
-        # Check that default includes were copied
+        # Check that required includes were copied
         include_dir = suite_dir / 'include'
         assert (include_dir / 'head.h').exists()
         assert (include_dir / 'tail.h').exists()
-        assert (include_dir / 'envir-p1.h').exists()
+        # envir-p1.h should NOT be copied (opt-in only)
+        assert not (include_dir / 'envir-p1.h').exists()
 
         # Check content contains expected markers from default files
         head_content = (include_dir / 'head.h').read_text()

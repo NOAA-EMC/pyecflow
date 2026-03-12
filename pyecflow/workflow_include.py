@@ -1,11 +1,11 @@
 """Workflow include module for pyecflow.
 
-This module provides functions to manage include files (head.h, envir-p1.h,
-tail.h) for ecFlow suites. Users can either provide custom paths to these
-files or use the default files from the package's static/ directory.
+This module provides functions to manage include files for ecFlow suites.
+head.h and tail.h are required by ecFlow. envir-p1.h is an optional NCO
+extension that is only deployed when explicitly configured.
 
 In ECMWF terminology, these are "includes" - files that get included into
-ecFlow task scripts. head.h and envir-p1.h are headers, tail.h is a footer.
+ecFlow task scripts. head.h is the header, tail.h is the footer.
 
 Functions
 ---------
@@ -21,8 +21,8 @@ read_static_file
 
 import os
 
-# Include files that should be present in the include/ directory
-INCLUDE_FILES = ['head.h', 'envir-p1.h', 'tail.h']
+# Required include files (must be present in the include/ directory)
+INCLUDE_FILES = ['head.h', 'tail.h']
 
 # Path to the static/ directory relative to this file
 STATIC_DIR = os.path.join(os.path.dirname(__file__), 'static')
@@ -30,7 +30,7 @@ STATIC_DIR = os.path.join(os.path.dirname(__file__), 'static')
 # Default include file names
 DEFAULT_HEAD = 'head.h'
 DEFAULT_TAIL = 'tail.h'
-DEFAULT_ENVIR = 'envir-p1.h'
+DEFAULT_ENVIR = 'envir-p1.h'  # Optional NCO extension
 
 
 def _get_static_path(name: str) -> str:
@@ -226,8 +226,9 @@ def ensure_includes(
 ) -> list:
     """Ensure all required include files are present in the include directory.
 
-    If custom paths are provided, those files will be used. Otherwise,
-    files are copied from the package's static/ directory.
+    head.h and tail.h are required by ecFlow and will always be deployed
+    (from custom paths or package defaults). envir-p1.h is an optional NCO
+    extension and is only deployed when envir_path is explicitly provided.
 
     When no custom paths are provided and files already exist in the include
     directory, they will not be overwritten (backward compatible behavior).
@@ -242,7 +243,8 @@ def ensure_includes(
     tail_path : str, optional
         Custom path to tail.h file. If None, uses default from static/.
     envir_path : str, optional
-        Custom path to envir-p1.h file. If None, uses default from static/.
+        Custom path to envir-p1.h file. If None, envir-p1.h is NOT deployed
+        (opt-in behavior for this NCO extension).
 
     Returns
     -------
@@ -251,7 +253,7 @@ def ensure_includes(
 
     Examples
     --------
-    Using default includes (backward compatible):
+    Using default includes (head.h and tail.h only):
 
     >>> copied = ensure_includes('/path/to/suite/include')
     >>> if copied:
@@ -259,12 +261,11 @@ def ensure_includes(
     ... else:
     ...     print("All includes already present")
 
-    Using custom include files:
+    With NCO envir-p1.h extension:
 
     >>> copied = ensure_includes(
     ...     '/path/to/suite/include',
-    ...     head_path='/custom/head.h',
-    ...     tail_path='/custom/tail.h'
+    ...     envir_path='/custom/envir-p1.h'  # or use default: static/envir-p1.h
     ... )
     """
     copied_files = []
@@ -273,14 +274,13 @@ def ensure_includes(
     if not os.path.exists(include_dir):
         os.makedirs(include_dir, exist_ok=True)
 
-    # Build list of (include_file_name, custom_path) tuples
-    include_configs = [
+    # Required includes: head.h and tail.h (always deployed)
+    required_configs = [
         (DEFAULT_HEAD, head_path),
         (DEFAULT_TAIL, tail_path),
-        (DEFAULT_ENVIR, envir_path),
     ]
 
-    for include_name, custom_path in include_configs:
+    for include_name, custom_path in required_configs:
         dest_path = os.path.join(include_dir, include_name)
 
         # Determine if we should copy/install this include
@@ -294,6 +294,12 @@ def ensure_includes(
             inc = _FileInclude(include_name, source_path)
             inc.install(include_dir)
             copied_files.append(include_name)
+
+    # Optional include: envir-p1.h (only if envir_path is explicitly provided)
+    if envir_path is not None:
+        inc = _FileInclude(DEFAULT_ENVIR, envir_path)
+        inc.install(include_dir)
+        copied_files.append(DEFAULT_ENVIR)
 
     return copied_files
 

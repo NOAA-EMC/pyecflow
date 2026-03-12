@@ -25,11 +25,10 @@ class TestIncludeFilesConstant:
     """Test the INCLUDE_FILES constant."""
 
     def test_include_files_contains_expected_files(self):
-        """Test that INCLUDE_FILES contains the three required include files."""
+        """Test that INCLUDE_FILES contains the two required include files."""
         assert 'head.h' in INCLUDE_FILES
-        assert 'envir-p1.h' in INCLUDE_FILES
         assert 'tail.h' in INCLUDE_FILES
-        assert len(INCLUDE_FILES) == 3
+        assert len(INCLUDE_FILES) == 2  # envir-p1.h is optional
 
     def test_static_dir_exists(self):
         """Test that the STATIC_DIR path exists."""
@@ -80,7 +79,7 @@ class TestEnsureIncludes:
         assert include_dir.is_dir()
 
     def test_copies_all_includes_to_empty_directory(self, tmp_path):
-        """Test that all include files are copied to an empty directory."""
+        """Test that required include files are copied to an empty directory."""
         include_dir = tmp_path / 'include'
         include_dir.mkdir()
 
@@ -88,7 +87,7 @@ class TestEnsureIncludes:
         copied = ensure_includes(str(include_dir))
         print(f"Include files copied: {copied}")
 
-        assert len(copied) == 3
+        assert len(copied) == 2  # Only head.h and tail.h (envir-p1.h is opt-in)
         for inc in INCLUDE_FILES:
             assert (include_dir / inc).exists()
 
@@ -118,19 +117,20 @@ class TestEnsureIncludes:
         assert 'head.h' not in copied
         # head.h should retain custom content
         assert (include_dir / 'head.h').read_text() == custom_content
-        # Other files should be copied
+        # tail.h should be copied
         assert 'tail.h' in copied
-        assert 'envir-p1.h' in copied
+        # envir-p1.h should NOT be copied (opt-in only)
+        assert 'envir-p1.h' not in copied
 
     def test_second_call_copies_nothing(self, tmp_path):
         """Test that calling ensure_includes twice doesn't copy files again."""
         include_dir = tmp_path / 'include'
 
-        # First call - should copy all files
+        # First call - should copy required files
         print(f"\nFirst call to ensure_includes: {include_dir}")
         first_copied = ensure_includes(str(include_dir))
         print(f"Include files copied (first call): {first_copied}")
-        assert len(first_copied) == 3
+        assert len(first_copied) == 2  # Only head.h and tail.h
 
         # Second call - should copy nothing
         print(f"Second call to ensure_includes: {include_dir}")
@@ -171,9 +171,8 @@ class TestIncludesExist:
         include_dir = tmp_path / 'include'
         include_dir.mkdir()
 
-        # Create only two include files (missing tail.h)
+        # Create only head.h (missing tail.h)
         (include_dir / 'head.h').write_text('# content')
-        (include_dir / 'envir-p1.h').write_text('# content')
 
         assert includes_exist(str(include_dir)) is False
 
@@ -228,8 +227,9 @@ class TestListMissingIncludes:
 
         assert 'head.h' not in missing
         assert 'tail.h' in missing
-        assert 'envir-p1.h' in missing
-        assert len(missing) == 2
+        # envir-p1.h is not in INCLUDE_FILES (it's optional)
+        assert 'envir-p1.h' not in missing
+        assert len(missing) == 1  # Only tail.h
 
     def test_returns_all_for_nonexistent_directory(self, tmp_path):
         """Test that all includes are listed as missing for non-existent dir."""
@@ -508,10 +508,13 @@ class TestEnsureIncludesWithCustomPaths:
         assert 'head.h' in copied
         assert (include_dir / 'head.h').read_text() == '# custom head'
 
-        # Default tail and envir should also be copied (from static/)
+        # Default tail should also be copied (from static/)
         assert 'tail.h' in copied
-        assert 'envir-p1.h' in copied
         assert 'ecflow_client' in (include_dir / 'tail.h').read_text()
+
+        # envir-p1.h should NOT be copied (opt-in only)
+        assert 'envir-p1.h' not in copied
+        assert not (include_dir / 'envir-p1.h').exists()
 
     def test_custom_path_file_not_found(self, tmp_path):
         """Test that FileNotFoundError is raised for nonexistent custom path."""

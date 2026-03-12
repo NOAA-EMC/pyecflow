@@ -188,6 +188,10 @@ class WorkflowSuite(pf.Suite):
             self._include_paths['tail'] = includes_config.get('tail') or None
             self._include_paths['envir'] = includes_config.get('envir') or None
 
+        # Set WorkflowTask class attribute for envir-p1.h inclusion
+        # Only include if envir path is explicitly configured (opt-in)
+        WorkflowTask._include_envir = self._include_paths.get('envir') is not None
+
         created_families = {}
 
         def _create_tree_recursive(parent_node, config_dict, parent_path=''):
@@ -369,14 +373,21 @@ class WorkflowSuite(pf.Suite):
         if not os.path.exists(scripts_dir):
             os.makedirs(scripts_dir, exist_ok=True)
 
+        # Determine effective envir path (method param overrides config)
+        effective_envir_path = envir_path or self._include_paths.get('envir', None)
+
+        # Update WorkflowTask class attribute for envir inclusion before deploying scripts
+        # This handles the case where envir_path is passed to generate_suite()
+        WorkflowTask._include_envir = effective_envir_path is not None
+
         # Deploy scripts
         self.deploy_suite()
 
-        # Copy includes (head.h, envir-p1.h, tail.h)
+        # Copy includes (head.h, tail.h required; envir-p1.h only if configured)
         # Priority: method parameters > config values > package defaults
         ensure_includes(
             include_dir,
             head_path=head_path or self._include_paths.get('head', None),
             tail_path=tail_path or self._include_paths.get('tail', None),
-            envir_path=envir_path or self._include_paths.get('envir', None)
+            envir_path=effective_envir_path
         )
