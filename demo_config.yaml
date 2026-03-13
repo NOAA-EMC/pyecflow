@@ -1,12 +1,13 @@
 # Demo configuration for pyecflow
 # This file demonstrates the structure of a workflow configuration
 
-# Optional: Specify custom header file paths
+# Optional: Specify custom include file paths
 # If omitted or paths are empty, defaults from static/ are used
-# headers:
+# Note: envir-p1.h is opt-in only (NCO extension) - only deployed if configured
+# includes:
 #   head: /path/to/custom/head.h
 #   tail: /path/to/custom/tail.h
-#   envir: /path/to/custom/envir-p1.h
+#   envir: /path/to/custom/envir-p1.h  # optional NCO extension
 
 family_A:
   tasks:

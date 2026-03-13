@@ -73,7 +73,7 @@ def main():
     # Count families and tasks for display
     def count_items(cfg, family_count=0, task_count=0):
         for key, value in cfg.items():
-            if key == 'headers':
+            if key == 'includes':
                 continue
             family_count += 1
             if value and 'tasks' in value:
@@ -164,13 +164,14 @@ def main():
             continue
         break
     
-    # Show headers
-    print_section("Include Files (headers)")
+    # Show include files
+    print_section("Include Files")
     include_dir = os.path.join(suite_dir, 'include')
-    for header_file in ['head.h', 'tail.h', 'envir-p1.h']:
-        header_path = os.path.join(include_dir, header_file)
-        if os.path.exists(header_path):
-            print_file_contents(header_path, max_lines=20)
+    # head.h and tail.h are always deployed; envir-p1.h only if configured
+    for include_file in ['head.h', 'tail.h', 'envir-p1.h']:
+        include_path = os.path.join(include_dir, include_file)
+        if os.path.exists(include_path):
+            print_file_contents(include_path, max_lines=20)
     
     # =========================================================================
     # SUMMARY
@@ -189,7 +190,7 @@ def main():
 pyecflow successfully generated:
   • {file_counts['def']} definition file(s) (.def)
   • {file_counts['ecf']} ecFlow script(s) (.ecf)  
-  • {file_counts['h']} header file(s) (.h)
+  • {file_counts['h']} include file(s) (.h)
 
 Output location: {suite_dir}
 
