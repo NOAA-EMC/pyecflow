@@ -75,11 +75,11 @@ class TestGenerateSuite:
         assert os.path.isdir(suite_dir / 'scripts'), "scripts/ is not a directory"
 
 
-class TestHeaderConfiguration:
-    """Test suite for header file configuration via YAML config."""
+class TestIncludeConfiguration:
+    """Test suite for include file configuration via YAML config."""
 
-    def test_default_headers_copied(self, tmp_path):
-        """Test that default headers are copied when no headers config provided."""
+    def test_default_includes_copied(self, tmp_path):
+        """Test that required includes are copied when no includes config provided."""
         suite_dir = tmp_path / "testSuite"
 
         config = {
@@ -101,11 +101,12 @@ class TestHeaderConfiguration:
         my_suite.generate_tree(config)
         my_suite.generate_suite(suite_dir=str(suite_dir))
 
-        # Check that default headers were copied
+        # Check that required includes were copied
         include_dir = suite_dir / 'include'
         assert (include_dir / 'head.h').exists()
         assert (include_dir / 'tail.h').exists()
-        assert (include_dir / 'envir-p1.h').exists()
+        # envir-p1.h should NOT be copied (opt-in only)
+        assert not (include_dir / 'envir-p1.h').exists()
 
         # Check content contains expected markers from default files
         head_content = (include_dir / 'head.h').read_text()
@@ -118,7 +119,7 @@ class TestHeaderConfiguration:
         custom_head.write_text("# Custom head file\necho 'Custom head'")
 
         config = {
-            'headers': {
+            'includes': {
                 'head': str(custom_head)
             },
             'family_A': {
@@ -147,11 +148,11 @@ class TestHeaderConfiguration:
         tail_content = (suite_dir / 'include' / 'tail.h').read_text()
         assert 'ecflow_client' in tail_content
 
-    def test_all_custom_headers_from_config(self, tmp_path):
-        """Test that all custom header paths from config are used."""
+    def test_all_custom_includes_from_config(self, tmp_path):
+        """Test that all custom include file paths from config are used."""
         suite_dir = tmp_path / "testSuite"
 
-        # Create custom header files
+        # Create custom include files
         custom_head = tmp_path / "custom_head.h"
         custom_tail = tmp_path / "custom_tail.h"
         custom_envir = tmp_path / "custom_envir.h"
@@ -161,7 +162,7 @@ class TestHeaderConfiguration:
         custom_envir.write_text("# Custom envir")
 
         config = {
-            'headers': {
+            'includes': {
                 'head': str(custom_head),
                 'tail': str(custom_tail),
                 'envir': str(custom_envir)
@@ -189,12 +190,12 @@ class TestHeaderConfiguration:
         assert (include_dir / 'tail.h').read_text() == "# Custom tail"
         assert (include_dir / 'envir-p1.h').read_text() == "# Custom envir"
 
-    def test_empty_header_paths_use_defaults(self, tmp_path):
-        """Test that empty header paths in config use defaults."""
+    def test_empty_include_paths_use_defaults(self, tmp_path):
+        """Test that empty include paths in config use defaults."""
         suite_dir = tmp_path / "testSuite"
 
         config = {
-            'headers': {
+            'includes': {
                 'head': '',  # Empty string should use default
                 'tail': None,  # None should use default
                 # envir not specified - should use default
@@ -222,12 +223,12 @@ class TestHeaderConfiguration:
         head_content = (include_dir / 'head.h').read_text()
         assert 'ECF_NAME' in head_content  # Default head.h marker
 
-    def test_headers_config_not_treated_as_family(self, tmp_path):
-        """Test that 'headers' key is not treated as a family name."""
+    def test_includes_config_not_treated_as_family(self, tmp_path):
+        """Test that 'includes' key is not treated as a family name."""
         suite_dir = tmp_path / "testSuite"
 
         config = {
-            'headers': {
+            'includes': {
                 'head': None
             },
             'family_A': {
@@ -247,6 +248,6 @@ class TestHeaderConfiguration:
         )
         families = my_suite.generate_tree(config)
 
-        # 'headers' should not appear as a family
-        assert 'headers' not in families
+        # 'includes' should not appear as a family
+        assert 'includes' not in families
         assert 'family_A' in families
