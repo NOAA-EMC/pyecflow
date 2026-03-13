@@ -73,3 +73,181 @@ class TestGenerateSuite:
         assert os.path.isdir(suite_dir / 'def'), "def/ is not a directory"
         assert os.path.isdir(suite_dir / 'include'), "include/ is not a directory"
         assert os.path.isdir(suite_dir / 'scripts'), "scripts/ is not a directory"
+
+
+class TestIncludeConfiguration:
+    """Test suite for include file configuration via YAML config."""
+
+    def test_default_includes_copied(self, tmp_path):
+        """Test that required includes are copied when no includes config provided."""
+        suite_dir = tmp_path / "testSuite"
+
+        config = {
+            'family_A': {
+                'tasks': {
+                    'task_A1': {
+                        'variables': {'VAR': '1'},
+                        'script': 'echo test'
+                    }
+                }
+            }
+        }
+
+        my_suite = WorkflowSuite(
+            'testSuite',
+            host=pf.LocalHost('localhost'),
+            files=str(suite_dir / 'scripts')
+        )
+        my_suite.generate_tree(config)
+        my_suite.generate_suite(suite_dir=str(suite_dir))
+
+        # Check that required includes were copied
+        include_dir = suite_dir / 'include'
+        assert (include_dir / 'head.h').exists()
+        assert (include_dir / 'tail.h').exists()
+        # envir-p1.h should NOT be copied (opt-in only)
+        assert not (include_dir / 'envir-p1.h').exists()
+
+        # Check content contains expected markers from default files
+        head_content = (include_dir / 'head.h').read_text()
+        assert 'ECF_NAME' in head_content
+
+    def test_custom_head_path_from_config(self, tmp_path):
+        """Test that custom head.h path from config is used."""
+        suite_dir = tmp_path / "testSuite"
+        custom_head = tmp_path / "custom_head.h"
+        custom_head.write_text("# Custom head file\necho 'Custom head'")
+
+        config = {
+            'includes': {
+                'head': str(custom_head)
+            },
+            'family_A': {
+                'tasks': {
+                    'task_A1': {
+                        'variables': {'VAR': '1'},
+                        'script': 'echo test'
+                    }
+                }
+            }
+        }
+
+        my_suite = WorkflowSuite(
+            'testSuite',
+            host=pf.LocalHost('localhost'),
+            files=str(suite_dir / 'scripts')
+        )
+        my_suite.generate_tree(config)
+        my_suite.generate_suite(suite_dir=str(suite_dir))
+
+        # Check custom head was used
+        head_content = (suite_dir / 'include' / 'head.h').read_text()
+        assert "Custom head file" in head_content
+
+        # Check default files were used for others
+        tail_content = (suite_dir / 'include' / 'tail.h').read_text()
+        assert 'ecflow_client' in tail_content
+
+    def test_all_custom_includes_from_config(self, tmp_path):
+        """Test that all custom include file paths from config are used."""
+        suite_dir = tmp_path / "testSuite"
+
+        # Create custom include files
+        custom_head = tmp_path / "custom_head.h"
+        custom_tail = tmp_path / "custom_tail.h"
+        custom_envir = tmp_path / "custom_envir.h"
+
+        custom_head.write_text("# Custom head")
+        custom_tail.write_text("# Custom tail")
+        custom_envir.write_text("# Custom envir")
+
+        config = {
+            'includes': {
+                'head': str(custom_head),
+                'tail': str(custom_tail),
+                'envir': str(custom_envir)
+            },
+            'family_A': {
+                'tasks': {
+                    'task_A1': {
+                        'variables': {'VAR': '1'},
+                        'script': 'echo test'
+                    }
+                }
+            }
+        }
+
+        my_suite = WorkflowSuite(
+            'testSuite',
+            host=pf.LocalHost('localhost'),
+            files=str(suite_dir / 'scripts')
+        )
+        my_suite.generate_tree(config)
+        my_suite.generate_suite(suite_dir=str(suite_dir))
+
+        include_dir = suite_dir / 'include'
+        assert (include_dir / 'head.h').read_text() == "# Custom head"
+        assert (include_dir / 'tail.h').read_text() == "# Custom tail"
+        assert (include_dir / 'envir-p1.h').read_text() == "# Custom envir"
+
+    def test_empty_include_paths_use_defaults(self, tmp_path):
+        """Test that empty include paths in config use defaults."""
+        suite_dir = tmp_path / "testSuite"
+
+        config = {
+            'includes': {
+                'head': '',  # Empty string should use default
+                'tail': None,  # None should use default
+                # envir not specified - should use default
+            },
+            'family_A': {
+                'tasks': {
+                    'task_A1': {
+                        'variables': {'VAR': '1'},
+                        'script': 'echo test'
+                    }
+                }
+            }
+        }
+
+        my_suite = WorkflowSuite(
+            'testSuite',
+            host=pf.LocalHost('localhost'),
+            files=str(suite_dir / 'scripts')
+        )
+        my_suite.generate_tree(config)
+        my_suite.generate_suite(suite_dir=str(suite_dir))
+
+        # All should use defaults
+        include_dir = suite_dir / 'include'
+        head_content = (include_dir / 'head.h').read_text()
+        assert 'ECF_NAME' in head_content  # Default head.h marker
+
+    def test_includes_config_not_treated_as_family(self, tmp_path):
+        """Test that 'includes' key is not treated as a family name."""
+        suite_dir = tmp_path / "testSuite"
+
+        config = {
+            'includes': {
+                'head': None
+            },
+            'family_A': {
+                'tasks': {
+                    'task_A1': {
+                        'variables': {'VAR': '1'},
+                        'script': 'echo test'
+                    }
+                }
+            }
+        }
+
+        my_suite = WorkflowSuite(
+            'testSuite',
+            host=pf.LocalHost('localhost'),
+            files=str(suite_dir / 'scripts')
+        )
+        families = my_suite.generate_tree(config)
+
+        # 'includes' should not appear as a family
+        assert 'includes' not in families
+        assert 'family_A' in families

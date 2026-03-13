@@ -27,16 +27,33 @@ __version__ : str
 
 Examples
 --------
+Basic usage with default includes:
+
 >>> from pyecflow import WorkflowSuite
+>>> import pyflow as pf
 >>> config = {
 ...     'family_A': {
 ...         'tasks': {'task1': {'variables': {...}, 'script': '...'}},
 ...         'children': {'family_Aa': {'tasks': {...}, 'children': {}}}
 ...     }
 ... }
->>> suite = WorkflowSuite('my_suite')
+>>> suite = WorkflowSuite('my_suite', host=pf.LocalHost('localhost'))
 >>> suite.generate_tree(config)  # Creates family hierarchy and tasks
 >>> suite.generate_suite(suite_dir='/path/to/suite')  # Deploys files
+
+With custom include files (optional):
+
+>>> config = {
+...     'includes': {  # Optional: custom include file paths
+...         'head': '/path/to/head.h',
+...         'tail': '/path/to/tail.h',
+...         'envir': '/path/to/envir-p1.h'
+...     },
+...     'family_A': {
+...         'tasks': {'task1': {'variables': {...}, 'script': '...'}}
+...     }
+... }
+>>> suite.generate_tree(config)  # Extracts include paths from config
 """
 
 from __future__ import absolute_import
