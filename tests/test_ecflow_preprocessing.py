@@ -231,11 +231,13 @@ export MY_CUSTOM_VAR="custom_value"
                 """Expand %include <file.h> directives with actual content."""
                 import re
                 pattern = r'%include\s+<([^>]+)>'
+
                 def replacer(match):
                     inc_file = inc_dir / match.group(1)
                     if inc_file.exists():
                         return inc_file.read_text()
                     return f"# Include not found: {match.group(1)}"
+
                 return re.sub(pattern, replacer, text)
 
             preprocessed = expand_includes(content, include_dir)
