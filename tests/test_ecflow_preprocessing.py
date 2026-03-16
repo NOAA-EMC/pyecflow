@@ -171,8 +171,10 @@ export MY_CUSTOM_VAR="custom_value"
         def_file = suite_dir / 'def' / 'testSuite.def'
         defs = ecflow.Defs(str(def_file))
 
+        job_dir = tmp_path / 'jobs'
+        job_dir.mkdir(exist_ok=True)
         job_ctrl = ecflow.JobCreationCtrl()
-        job_ctrl.set_dir_for_job_creation(str(tmp_path / 'jobs'))
+        job_ctrl.set_dir_for_job_creation(str(job_dir))
 
         result = defs.check_job_creation(job_ctrl)
         # check_job_creation returns None on success, or an error string on failure
@@ -227,6 +229,8 @@ export MY_CUSTOM_VAR="custom_value"
             content = ecf_file.read_text()
 
             # Expand %include directives
+            missing_includes = []
+
             def expand_includes(text, inc_dir):
                 """Expand %include <file.h> directives with actual content."""
                 import re
@@ -236,11 +240,20 @@ export MY_CUSTOM_VAR="custom_value"
                     inc_file = inc_dir / match.group(1)
                     if inc_file.exists():
                         return inc_file.read_text()
+                    # Track missing includes so the test can fail explicitly
+                    missing_includes.append(str(inc_file))
                     return f"# Include not found: {match.group(1)}"
 
                 return re.sub(pattern, replacer, text)
 
             preprocessed = expand_includes(content, include_dir)
+
+            # Fail if any include files were missing
+            if missing_includes:
+                pytest.fail(
+                    f"Missing include files for {ecf_file.name}: "
+                    f"{', '.join(missing_includes)}"
+                )
 
             # Strip ecFlow-specific directives for bash validation
             # Remove %nopp, %end, %manual, %comment, %ecf_*, etc.
@@ -250,8 +263,11 @@ export MY_CUSTOM_VAR="custom_value"
             preprocessed = re.sub(r'^%manual\s*$', '# manual section', preprocessed, flags=re.MULTILINE)
             preprocessed = re.sub(r'^%comment\s*$', '#', preprocessed, flags=re.MULTILINE)
 
-            # Write preprocessed content to temp file for bash validation
-            job_file = tmp_path / f"{ecf_file.stem}.job"
+            # Write preprocessed content to temp file for bash validation.
+            # Use the relative path from scripts_dir to ensure uniqueness.
+            relative_path = ecf_file.relative_to(scripts_dir)
+            job_name = str(relative_path).replace(os.sep, "_")
+            job_file = tmp_path / f"{job_name}.job"
             job_file.write_text(preprocessed)
 
             result = subprocess.run(
