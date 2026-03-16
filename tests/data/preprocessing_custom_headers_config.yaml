@@ -1,6 +1,6 @@
-# Test configuration for ecFlow preprocessing with custom headers
+# Test configuration for ecFlow preprocessing with custom includes
 # Used by test_ecflow_preprocessing.py
-# Note: headers paths are injected at test runtime
+# Note: includes paths are injected at test runtime
 
 family_A:
   tasks:
