@@ -14,7 +14,6 @@ import yaml
 
 from pyecflow import WorkflowSuite
 
-
 # Path to test data files
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 

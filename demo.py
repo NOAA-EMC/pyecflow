@@ -54,22 +54,22 @@ def tree(directory, prefix=""):
 
 def main():
     print_section("pyecflow Demo - Generating ecFlow Workflows from Config")
-    
+
     # =========================================================================
     # STEP 1: Load the workflow configuration from YAML
     # =========================================================================
     print_section("Step 1: Load Workflow Configuration from YAML")
-    
+
     # Load configuration from YAML file
     config_file = os.path.join(os.path.dirname(__file__), 'demo_config.yaml')
     print(f"Loading config from: {config_file}")
-    
+
     with open(config_file, 'r') as f:
         config = yaml.safe_load(f)
-    
+
     # Show the YAML contents
     print_file_contents(config_file, max_lines=30)
-    
+
     # Count families and tasks for display
     def count_items(cfg, family_count=0, task_count=0):
         for key, value in cfg.items():
@@ -83,75 +83,75 @@ def main():
                 family_count += fc
                 task_count += tc
         return family_count, task_count
-    
+
     num_families, num_tasks = count_items(config)
     print(f"Configuration loaded with {num_families} families and {num_tasks} tasks")
-    
+
     # =========================================================================
     # STEP 2: Create the WorkflowSuite
     # =========================================================================
     print_section("Step 2: Create WorkflowSuite")
-    
+
     # Create suite with a local host (for demo purposes)
     suite = WorkflowSuite(
         'demo_workflow',
         host=pf.LocalHost('localhost'),
         defstatus=pf.state.suspended  # Start suspended for safety
     )
-    
+
     print(f"Created suite: {suite.name}")
     print(f"Host: localhost (LocalHost)")
     print(f"Default status: suspended")
-    
+
     # =========================================================================
     # STEP 3: Generate the family/task tree
     # =========================================================================
     print_section("Step 3: Generate Family/Task Tree")
-    
+
     families = suite.generate_tree(config)
-    
+
     print("Generated families:")
     for family_path in sorted(families.keys()):
         depth = family_path.count('/')
         print(f"  {'  ' * depth}• {family_path.split('/')[-1]} ({family_path})")
-    
+
     # =========================================================================
     # STEP 4: Generate the suite files
     # =========================================================================
     print_section("Step 4: Generate Suite Files")
-    
+
     # Create a temporary directory for the demo output
     demo_dir = tempfile.mkdtemp(prefix='pyecflow_demo_')
     suite_dir = os.path.join(demo_dir, 'demo_workflow')
-    
+
     # Set ECF_FILES - required by pyflow's AnchorFamily to know where scripts go
     scripts_dir = os.path.join(suite_dir, 'scripts')
     os.makedirs(scripts_dir, exist_ok=True)
     suite.ECF_FILES = scripts_dir
-    
+
     print(f"Output directory: {suite_dir}")
     print("\nGenerating suite files...")
-    
+
     suite.generate_suite(suite_dir=suite_dir)
-    
+
     print("Suite generation complete!")
-    
+
     # =========================================================================
     # STEP 5: Show the generated output
     # =========================================================================
     print_section("Step 5: Generated Directory Structure")
-    
+
     print(f"\n{suite_dir}/")
     tree(suite_dir)
-    
+
     # Show the definition file
     print_section("Generated Definition File (.def)")
     def_file = os.path.join(suite_dir, 'def', 'demo_workflow.def')
     print_file_contents(def_file)
-    
+
     # Show a sample script
     print_section("Sample Generated Script (.ecf)")
-    
+
     # Find and show a script file
     scripts_dir = os.path.join(suite_dir, 'scripts')
     for root, dirs, files in os.walk(scripts_dir):
@@ -163,7 +163,7 @@ def main():
         else:
             continue
         break
-    
+
     # Show include files
     print_section("Include Files")
     include_dir = os.path.join(suite_dir, 'include')
@@ -172,12 +172,12 @@ def main():
         include_path = os.path.join(include_dir, include_file)
         if os.path.exists(include_path):
             print_file_contents(include_path, max_lines=20)
-    
+
     # =========================================================================
     # SUMMARY
     # =========================================================================
     print_section("Summary")
-    
+
     # Count generated files
     file_counts = {'def': 0, 'ecf': 0, 'h': 0}
     for root, dirs, files in os.walk(suite_dir):
@@ -185,11 +185,11 @@ def main():
             ext = f.split('.')[-1]
             if ext in file_counts:
                 file_counts[ext] += 1
-    
+
     print(f"""
 pyecflow successfully generated:
   • {file_counts['def']} definition file(s) (.def)
-  • {file_counts['ecf']} ecFlow script(s) (.ecf)  
+  • {file_counts['ecf']} ecFlow script(s) (.ecf)
   • {file_counts['h']} include file(s) (.h)
 
 Output location: {suite_dir}
@@ -200,7 +200,7 @@ To load this suite into ecFlow:
 To clean up the demo directory:
   rm -rf {demo_dir}
 """)
-    
+
     return suite_dir, demo_dir
 
 
