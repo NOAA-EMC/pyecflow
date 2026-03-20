@@ -1,0 +1,25 @@
+# Test configuration for ecFlow preprocessing validation
+# Used by test_ecflow_preprocessing.py
+
+family_A:
+  tasks:
+    task_A1:
+      variables:
+        NUMBER: 1
+      script: "echo Running task_A1 with NUMBER=$NUMBER"
+  children:
+    family_Aa:
+      tasks:
+        task_Aa1:
+          variables:
+            NUMBER: 11
+          script: "echo Running task_Aa1"
+      children: {}
+
+family_B:
+  tasks:
+    task_B1:
+      variables:
+        NUMBER: 2
+      script: "echo Running task_B1"
+  children: {}
